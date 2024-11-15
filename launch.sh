@@ -13,4 +13,4 @@ module load miniconda/miniconda-fall2024
 source ~/.bashrc
 conda activate venv 
 
-python run.py
+python code/run.py

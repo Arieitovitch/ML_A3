@@ -29,8 +29,5 @@ This project uses a **Conda environment** for managing dependencies. The `enviro
    conda env create -f environment.yml
    conda activate venv
 
-2. **Data Prep**:
-    The data is preloaded into the repo, if you need to reload it do it locally not worth wasting GPU time to do that.
-
-3. **Running On The GPU**:
+2. **Running On The GPU**:
     The launch file will run all code in the run.py file so we will run everything from out of there

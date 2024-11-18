@@ -21,7 +21,7 @@ class MLP:
 
     # Activation functions and their derivatives
     def relu(self, z): return np.maximum(0, z)
-    def leaky_relu_derivative(self, z, alpha=0.01): return np.where(z > 0, 1, alpha)
+    def relu_derivative(self, z, alpha=0.01): return np.where(z > 0, 1, alpha)
 
     def tanh(self, z): return np.tanh(z)
     def tanh_derivative(self, z): return 1 - np.tanh(z) ** 2

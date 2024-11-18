@@ -36,37 +36,32 @@ class TransferLearningModel(nn.Module):
 
 
 def prepare_128px_data():
-    # Define the transformation including resizing
     transform = transforms.Compose([
         transforms.Resize((128, 128)),
         transforms.Grayscale(num_output_channels=1),
         transforms.ToTensor(),
     ])
-    
-    # Load the dataset with the transform
     train_dataset = OrganAMNIST(split='train', download=True, transform=transform)
     test_dataset = OrganAMNIST(split='test', download=True, transform=transform)
-    
-    # Extract images and labels
+
     X_train_128 = []
     y_train_128 = []
     for img, label in train_dataset:
-        img = img.squeeze(0)  # Remove channel dimension
-        X_train_128.append(img.numpy().flatten())
-        y_train_128.append(label)
+        X_train_128.append(img.numpy().reshape(-1)) 
+        y_train_128.append(label.item())
     X_train_128 = np.array(X_train_128)
     y_train_128 = np.array(y_train_128)
-    
+
     X_test_128 = []
     y_test_128 = []
     for img, label in test_dataset:
-        img = img.squeeze(0)
-        X_test_128.append(img.numpy().flatten())
-        y_test_128.append(label)
+        X_test_128.append(img.numpy().reshape(-1))
+        y_test_128.append(label.item())
     X_test_128 = np.array(X_test_128)
     y_test_128 = np.array(y_test_128)
-    
+
     return X_train_128, y_train_128, X_test_128, y_test_128
+
 
 # Load the preprocessed data
 def load_data(file_path):
@@ -246,6 +241,7 @@ def task4():
     y_pred_un = model_un.predict(X_test_un)
     acc_un = np.mean(y_pred_un == y_test_un)
     print(f"Model on Unnormalized Data Test Accuracy: {acc_un * 100:.2f}%\n")
+    
 def task5(): 
     X_train_128, y_train_128, X_test_128, y_test_128 = prepare_128px_data()
     
@@ -335,3 +331,6 @@ def task8():
     train_transfer_model(transfer_model, train_loader_aug, criterion, optimizer, epochs=10)
     print("Evaluating Transfer Learning Model")
     evaluate_transfer_model(transfer_model, test_loader_aug)
+    
+    
+task5()

@@ -8,9 +8,9 @@
 #SBATCH --output=%N-%j .out
 #SBATCH --account=fall2024-comp551
 
-module load cuda/cuda-12.6
-module load miniconda/miniconda-fall2024
-source ~/.bashrc
+#module load cuda/cuda-12.6
+#module load miniconda/miniconda-fall2024
+#source ~/.bashrc
 conda activate venv 
 
 python code/run.py

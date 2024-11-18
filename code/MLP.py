@@ -1,7 +1,10 @@
 import numpy as np
 
 class MLP:
-    def __init__(self, input_size, hidden_layers, output_size, activations=None):
+    def __init__(
+        self, input_size, hidden_layers, output_size, activations=None, 
+        default_weights=None, default_biases=None, save_history=True
+        ):
         """
         Initialize the MLP with configurable activations per layer.
         :param input_size: Number of input features
@@ -10,14 +13,22 @@ class MLP:
         :param activations: List of activation functions for each layer
         """
         self.layers = [input_size] + hidden_layers + [output_size]
-        self.weights = [np.random.randn(self.layers[i], self.layers[i + 1]) * 0.01 
-                        for i in range(len(self.layers) - 1)]
-        self.biases = [np.zeros((1, self.layers[i + 1])) for i in range(len(self.layers) - 1)]
+        self.weights = [
+            np.random.randn(self.layers[i], self.layers[i + 1]) * 0.01 
+            for i in range(len(self.layers) - 1)
+        ] if default_weights is None else default_weights
+        self.biases = [
+            np.zeros((1, self.layers[i + 1])) for i in range(len(self.layers) - 1)
+        ] if default_biases is None else default_biases
         
         # Default activations if none provided
         if activations is None:
             activations = ['relu'] * (len(hidden_layers)) + ['softmax']
         self.activations = activations
+        
+        # Save history of loss
+        self.save_history = save_history
+        self.history = {} #{epoch: loss}
 
     # Activation functions and their derivatives
     def relu(self, z): return np.maximum(0, z)
@@ -86,7 +97,7 @@ class MLP:
                 derivative = activation_derivative_func(self.z[i - 1])
                 dz = da * derivative
 
-    def fit(self, X, y, epochs=100, lr=0.01, batch_size=64):
+    def fit(self, X, y, epochs=100, lr=0.01, batch_size=64, save_weights=True, path_prefix=""):
         """
         Train the model using mini-batch gradient descent.
         :param X: Training data
@@ -110,9 +121,17 @@ class MLP:
                 self.backward(X_batch, y_batch, lr)
 
             # Print loss for debugging (optional)
+            loss = round(-np.mean(np.sum(y * np.log(self.a[-1] + 1e-8), axis=1)), 4)
             if epoch % 10 == 0:
-                loss = -np.mean(np.sum(y * np.log(self.a[-1] + 1e-8), axis=1))
-                print(f"Epoch {epoch}: Loss = {loss:.4f}")
+                print(f"Epoch {epoch}: Loss = {loss}")
+            if self.save_history:
+                self.history[epoch] = loss
+            
+        # Save weights and biases
+        if save_weights:
+            np.save(f"weights/{path_prefix + "/" if path_prefix else ""}weights.npy", self.weights)
+            np.save(f"weights/{path_prefix + "/" if path_prefix else ""}biases.npy", self.biases)
+        
 
     def predict(self, X):
         """

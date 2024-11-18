@@ -21,11 +21,17 @@ class MLP:
 
     # Activation functions and their derivatives
     def relu(self, z): return np.maximum(0, z)
-    def relu_derivative(self, z): return (z > 0).astype(float)
+    def leaky_relu_derivative(self, z, alpha=0.01): return np.where(z > 0, 1, alpha)
 
     def tanh(self, z): return np.tanh(z)
     def tanh_derivative(self, z): return 1 - np.tanh(z) ** 2
+    def leaky_relu(self, z, alpha=0.01):
+        return np.where(z > 0, z, alpha * z)
 
+    def leaky_relu_derivative(self, z, alpha=0.01):
+        dz = np.ones_like(z)
+        dz[z < 0] = alpha
+        return dz
     def softmax(self, z):
         exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
         return exp_z / np.sum(exp_z, axis=1, keepdims=True)
@@ -33,11 +39,13 @@ class MLP:
     def get_activation(self, name):
         if name == 'relu': return self.relu
         elif name == 'tanh': return self.tanh
+        elif name == 'leaky_relu': return self.leaky_relu
         elif name == 'softmax': return self.softmax
         else: raise ValueError(f"Unsupported activation: {name}")
 
     def get_activation_derivative(self, name):
         if name == 'relu': return self.relu_derivative
+        elif name == 'leaky_relu': return self.leaky_relu_derivative
         elif name == 'tanh': return self.tanh_derivative
         else: raise ValueError(f"Unsupported derivative for activation: {name}")
 
@@ -51,7 +59,7 @@ class MLP:
         self.z = []
 
         for i in range(len(self.weights)):
-            z = self.a[-1] @ self.weights[i] + self.biases[i]
+            z = np.dot(self.a[-1], self.weights[i]) + self.biases[i]
             self.z.append(z)
 
             # Apply layer-specific activation
@@ -61,27 +69,22 @@ class MLP:
         return self.a[-1]
 
     def backward(self, X, y, lr):
-        """
-        Perform backward propagation.
-        :param X: Input data
-        :param y: One-hot encoded labels
-        :param lr: Learning rate
-        """
         m = X.shape[0]
         y_pred = self.a[-1]
-        dz = y_pred - y  # Derivative of loss w.r.t. output
-
+        dz = y_pred - y  # Shape: (batch_size, num_classes)
         for i in reversed(range(len(self.weights))):
-            dw = self.a[i].T @ dz / m
+            # Compute gradients
+            dw = np.dot(self.a[i].T, dz) / m
             db = np.sum(dz, axis=0, keepdims=True) / m
-
-            if i > 0:
-                activation_derivative_func = self.get_activation_derivative(self.activations[i - 1])
-                dz = dz @ self.weights[i].T * activation_derivative_func(self.z[i - 1])
-
             # Update weights and biases
             self.weights[i] -= lr * dw
             self.biases[i] -= lr * db
+            # Backpropagate the error
+            if i > 0:
+                activation_derivative_func = self.get_activation_derivative(self.activations[i - 1])
+                da = np.dot(dz, self.weights[i].T)
+                derivative = activation_derivative_func(self.z[i - 1])
+                dz = da * derivative
 
     def fit(self, X, y, epochs=100, lr=0.01, batch_size=64):
         """

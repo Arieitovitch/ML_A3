@@ -1,7 +1,7 @@
 import numpy as np
 import os
-from medmnist import OrganAMNIST
-from medmnist import INFO
+from medmnist import OrganAMNIST# type: ignore
+from medmnist import INFO# type: ignore
 
 def normalize_data(data):
     """

@@ -1,4 +1,6 @@
 import numpy as np
+import os
+import pickle
 class MLPREG:
     def __init__(
         self, input_size, hidden_layers, output_size, activations=None,
@@ -139,6 +141,17 @@ class MLPREG:
                 print(f"Epoch {epoch}: Loss = {total_loss}")
         
         if save_weights:
-            np.save(f"weights/{path_prefix + '/' if path_prefix else ''}weights.npy", self.weights)
-            np.save(f"weights/{path_prefix + '/' if path_prefix else ''}biases.npy", self.biases)
+            if path_prefix:
+                path_prefix = path_prefix.replace(' ','').replace('(','').replace(')','')
+                directory = f"weights/{path_prefix}"
+            else:
+                directory = "weights"
+            
+            os.makedirs(directory, exist_ok=True)  # Create the directory recursively
+            # Save weights and biases
+            with open(f"{directory}/weights.pkl", "wb") as f:
+                pickle.dump(self.weights, f)
+            with open(f"{directory}/biases.pkl", "wb") as f:
+                pickle.dump(self.biases, f)
+
                 

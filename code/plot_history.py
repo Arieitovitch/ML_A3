@@ -29,9 +29,25 @@ def load_history(path):
         history = pickle.load(f)
     return history
 
+# Load the history of loss for Task 1
 
 histories = list(load_history("histories/loss_histories_task1.pkl").values())
 for i, history in enumerate(histories):
     print(history)
     print(type(history))
     plot_history(history, title="Loss history for Task 1", save_path=f"loss_task1_{1+i}.png")
+
+# Load the history of loss for Task 2
+histories = list(load_history("histories/loss_histories_task2.pkl").values())
+for i, history in enumerate(histories):
+    plot_history(history, title="Loss history for Task 2", save_path=f"loss_task2_{1+i}.png")
+
+# Load the history of loss for Task 3
+histories = list(load_history("histories/loss_histories_task3.pkl").values())
+for i, history in enumerate(histories):
+    plot_history(history, title="Loss history for Task 3", save_path=f"loss_task3_{1+i}.png")
+
+# Load the history of loss for Task 4
+histories = list(load_history("histories/loss_histories_task4.pkl").values())
+for i, history in enumerate(histories):
+    plot_history(history, title="Loss history for Task 4", save_path=f"loss_task4_{1+i}.png")

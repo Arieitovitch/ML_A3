@@ -41,11 +41,11 @@ class MLP:
         
         # Save history of loss
         self.save_history = save_history
-        self.history = {} #{epoch: loss}
+        self.history = {}      # {epoch: loss}
+        self.val_history = {}  # {epoch: val_loss}
 
         print("Model initialized with the following configuration:")
         print(f"Weights: min={np.min([np.min(w) for w in self.weights])}, max={np.max([np.max(w) for w in self.weights])}")
-
         self.hist_z_max = []
         self.hist_z_min = []
 
@@ -146,7 +146,7 @@ class MLP:
                 derivative = activation_derivative_func(self.z[i - 1])
                 dz = da * derivative
 
-    def fit(self, X, y, epochs=50, lr=0.01, batch_size=32, save_weights=True, path_prefix=""):
+    def fit(self, X, y, epochs=50, lr=0.01, batch_size=32, save_weights=True, path_prefix="", y_val=None, X_val=None):
         """
         Train the model using mini-batch gradient descent.
         :param X: Training data
@@ -169,13 +169,40 @@ class MLP:
                 self.forward(X_batch)
                 self.backward(X_batch, y_batch, lr)
 
-            # Print loss for debugging (optional)
-            loss = round(-np.mean(np.sum(y * np.log(self.a[-1] + 1e-8), axis=1)), 4)
-            if epoch % 10 == 0:
-                print(f"Epoch {epoch}: Loss = {loss}")
+            # Compute training loss
+            logits = self.forward(X)
+            loss = self.compute_loss(y, logits)
+            
+            # Compute validation loss if validation data is provided
+            if X_val is not None and y_val is not None:
+                val_logits = self.forward(X_val)
+                val_loss = self.compute_loss(y_val, val_logits)
+            else:
+                val_loss = None
+
+            # Save losses
             if self.save_history:
                 self.history[epoch] = loss
-            
+                if val_loss is not None:
+                    self.val_history[epoch] = val_loss
+
+            # Print losses for monitoring
+            if epoch % 10 == 0:
+                if val_loss is not None:
+                    print(f"Epoch {epoch}: Training Loss = {loss:.4f}, Validation Loss = {val_loss:.4f}")
+                else:
+                    print(f"Epoch {epoch}: Training Loss = {loss:.4f}")
+
+            # Early stopping -> possible future extension
+            # if val_total_loss is not None:
+            #     if epoch > 0 and val_total_loss > self.val_history[epoch - 1]:
+            #         early_stop_counter += 1
+            #         if early_stop_counter >= patience:
+            #             print("Early stopping triggered.")
+            #             break
+            #     else:
+            #         early_stop_counter = 0
+
         # Save weights and biases
         if save_weights:
             if path_prefix:
@@ -183,14 +210,14 @@ class MLP:
                 directory = f"weights/{path_prefix}"
             else:
                 directory = "weights"
-            
+
             os.makedirs(directory, exist_ok=True)  # Create the directory recursively
             # Save weights and biases
             with open(f"{directory}/weights.pkl", "wb") as f:
                 pickle.dump(self.weights, f)
             with open(f"{directory}/biases.pkl", "wb") as f:
                 pickle.dump(self.biases, f)
-        
+            
 
     def predict(self, X):
         """
@@ -200,3 +227,12 @@ class MLP:
         """
         probabilities = self.forward(X)
         return np.argmax(probabilities, axis=1)
+    
+    def compute_loss(self, y_true, logits):
+        logits_stable = logits - np.max(logits, axis=1, keepdims=True)
+        log_sum_exp = np.log(np.sum(np.exp(logits_stable), axis=1, keepdims=True))
+        logits_true_class = np.sum(logits_stable * y_true, axis=1, keepdims=True)
+        loss = -logits_true_class + log_sum_exp
+        loss = np.mean(loss)
+        return loss
+

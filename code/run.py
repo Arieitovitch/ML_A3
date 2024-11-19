@@ -100,6 +100,7 @@ num_classes = len(np.unique(y_train))
 # One-hot encode the labels
 y_train_one_hot = one_hot_encode(y_train, num_classes)
 y_test_one_hot = one_hot_encode(y_test, num_classes)
+y_val_one_hot = one_hot_encode(y_val, num_classes)
 
 # Import the MLP class (assuming it's defined in mlp.py)
 # from mlp import MLP
@@ -221,7 +222,7 @@ def evaluate_transfer_model(model, test_loader):
 # Function to train and evaluate a model
 def train_and_evaluate(model, model_name, epochs=100, lr = 0.01, batch_size=64):
     print(f"Training {model_name}")
-    model.fit(X_train, y_train_one_hot, epochs=epochs, lr=lr, batch_size=batch_size, save_weights=True, path_prefix=model_name)
+    model.fit(X_train, y_train_one_hot, epochs=epochs, lr=lr, batch_size=batch_size, save_weights=True, path_prefix=model_name, y_val = y_val_one_hot, X_val = X_val)
     y_pred = model.predict(X_test)
     test_accuracy = np.mean(y_pred == y_test)
     print(f"{model_name} Test Accuracy: {test_accuracy * 100:.2f}%\n")
@@ -254,7 +255,17 @@ def task1():
     }
     # Save to a pickle file
     save_histories(histories, "loss_histories_task1")
-    
+
+    # Write validation history to memory
+    val_losses = {
+        "Model 1 (No Hidden Layers)": model1.val_history,
+        "Model 2 (One Hidden Layer)": model2.val_history,
+        "Model 3 (Two Hidden Layers)": model3.val_history,
+    }
+    # Save to a pickle file
+    save_histories(val_losses, "val_loss_histories_task1")
+
+    # Return the test accuracies
     return {
         "Model 1 (No Hidden Layers)": acc1, 
         "Model 2 (One Hidden Layer)": acc2, 
@@ -266,12 +277,12 @@ def task2():
     # Model with tanh activations
     activations_tanh = ['tanh', 'tanh', 'softmax']
     model_tanh = MLP(input_size, hidden_layers, num_classes, activations_tanh)
-    acc_tanh = train_and_evaluate(model_tanh, "Model with Tanh Activations", epochs=100, lr = 0.01, batch_size=256)
+    acc_tanh = train_and_evaluate(model_tanh, "Model with Tanh Activations", epochs=100, lr = 0.01, batch_size=128)
 
     # Model with Leaky ReLU activations
     activations_leaky_relu = ['leaky_relu', 'leaky_relu', 'softmax']
     model_leaky_relu = MLP(input_size, hidden_layers, num_classes, activations_leaky_relu)
-    acc_leaky_relu = train_and_evaluate(model_leaky_relu, "Model with Leaky ReLU Activations", epochs=100, lr = 0.01, batch_size=256)
+    acc_leaky_relu = train_and_evaluate(model_leaky_relu, "Model with Leaky ReLU Activations", epochs=100, lr = 0.01, batch_size=128)
     
     # Write histories to memory
     histories = {
@@ -280,6 +291,14 @@ def task2():
     }
     # Save to a pickle file
     save_histories(histories, "loss_histories_task2")
+
+    # Write validation history to memory
+    val_losses = {
+        "Model with Tanh Activations": model_tanh.val_history,
+        "Model with Leaky ReLU Activations": model_leaky_relu.val_history,
+    }
+    # Save to a pickle file
+    save_histories(val_losses, "val_loss_histories_task2")
     
     return {
         "Model with Tanh Activations": acc_tanh,
@@ -290,7 +309,7 @@ def task3():
     activations = ['leaky_relu', 'leaky_relu', 'softmax']
     model_l1 = MLPREG(input_size, hidden_layers, num_classes, activations)
     print("Training Model with L1 Regularization")
-    model_l1.fit(X_train, y_train_one_hot, epochs=50, lr=0.01, batch_size=64, l1_lambda=0.001, save_weights=True, path_prefix="task3_l1")
+    model_l1.fit(X_train, y_train_one_hot, epochs=100, lr=0.005, batch_size=64, l1_lambda=0.001, save_weights=True, path_prefix="task3_l1", X_val=X_val, y_val=y_val_one_hot)
     y_pred_l1 = model_l1.predict(X_test)
     acc_l1 = np.mean(y_pred_l1 == y_test)
     print(f"Model with L1 Regularization Test Accuracy: {acc_l1 * 100:.2f}%\n")
@@ -298,7 +317,7 @@ def task3():
     model_l2 = MLPREG(input_size, hidden_layers, num_classes, activations)
     print("Training Model with L2 Regularization")
     
-    model_l2.fit(X_train, y_train_one_hot, epochs=50, lr=0.01, batch_size=64, l2_lambda=0.001, save_weights=True, path_prefix="task3_l2")
+    model_l2.fit(X_train, y_train_one_hot, epochs=100, lr=0.005, batch_size=64, l2_lambda=0.001, save_weights=True, path_prefix="task3_l2", X_val=X_val, y_val=y_val_one_hot)
     y_pred_l2 = model_l2.predict(X_test)
     acc_l2 = np.mean(y_pred_l2 == y_test)
     print(f"Model with L2 Regularization Test Accuracy: {acc_l2 * 100:.2f}%\n")
@@ -310,6 +329,14 @@ def task3():
     }
     # Save to a pickle file
     save_histories(histories, "loss_histories_task3")
+
+    # Write validation history to memory
+    val_losses = {
+        "Model with L1 Regularization": model_l1.val_history,
+        "Model with L2 Regularization": model_l2.val_history,
+    }
+    # Save to a pickle file
+    save_histories(val_losses, "val_loss_histories_task3")
     
     return {
         "Model with L1 Regularization": acc_l1,
@@ -322,17 +349,16 @@ def task4():
 
     # Train the model on unnormalized data
     print("Training Model on Unnormalized Data")
-    model_un.fit(X_train_un, y_train_un_one_hot, epochs=50, lr=0.01, batch_size=64, save_weights=True, path_prefix="task4_un")
+    model_un.fit(X_train_un, y_train_un_one_hot, epochs=50, lr=0.01, batch_size=64, save_weights=True, path_prefix="task4_un", X_val=X_val, y_val=y_val_one_hot)
     y_pred_un = model_un.predict(X_test_un)
     acc_un = np.mean(y_pred_un == y_test_un)
     print(f"Model on Unnormalized Data Test Accuracy: {acc_un * 100:.2f}%\n")
     
     # Write histories to memory
-    histories = {
-        "Model on Unnormalized Data": model_un.history,
-    }
-    # Save to a pickle file
+    histories = {"Model on Unnormalized Data": model_un.history}
     save_histories(histories, "loss_histories_task4")
+    val_losses = {"Model on Unnormalized Data": model_un.val_history}
+    save_histories(val_losses, "val_loss_histories_task4")
 
     return {
         "Model on Unnormalized Data": acc_un,
@@ -454,10 +480,10 @@ def task8():
     
 
 results1_4 = {
-    # "Task 1": task1(),
+    "Task 1": task1(),
     "Task 2": task2(),
-    # "Task 3": task3(),
-    # "Task 4": task4(),
+    "Task 3": task3(),
+    "Task 4": task4(),
 }
 # results5_6= {
 #     "Task 5": task5(),

@@ -12,3 +12,18 @@ def softmax(self, z):
 
 ```
 - also attempted to use log-softmax
+
+- Realized that we don't need clipping as much after doing z-score normalization (ie gaussian)
+  - still need it when batch size is small
+- Trying with smaller and smaller batch sizes. Added clipping back only on the softmax function
+- 
+
+
+# Task 2:
+
+
+## Leaky Relu - vanishing gradient
+1. Improper Weight Initialization
+Standard Deviation Too Low: Initializing weights with a small standard deviation (e.g., 
+0.01
+0.01) can lead to small initial activations.

@@ -33,7 +33,7 @@ def save_data(file_name, data):
     """
     np.savez_compressed(file_name, **data)
 
-def main(output_dir="processed_data"):
+def main(output_dir="code/processed_data"):
     os.makedirs(output_dir, exist_ok=True)
 
     # Load the dataset
@@ -82,7 +82,7 @@ def main(output_dir="processed_data"):
 
     # Save MLP data
     save_data(
-        os.path.join(output_dir, "mlp_data.npz"),
+        os.path.join(output_dir, "mlp_data_unnormalized.npz"),
         {
             "X_train": X_train_mlp,
             "y_train": y_train,

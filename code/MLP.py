@@ -46,8 +46,46 @@ class MLP:
         dz[z < 0] = alpha
         return dz
     def softmax(self, z):
-        exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
-        return exp_z / np.sum(exp_z, axis=1, keepdims=True)
+        # Print diagnostics for debugging
+        print("Max value in z (before processing):", np.max(z))
+        print("Min value in z (before processing):", np.min(z))
+
+        # Compute the maximum for numerical stability
+        z_max = np.max(z, axis=1, keepdims=True)
+
+        # Subtract max value from z for numerical stability
+        z = z - z_max
+
+        # Clip z to prevent large values in exp
+        z = np.clip(z, -700, 700)  # Clip after subtracting z_max
+
+        # Compute the exponentials and their sum
+        exp_z = np.exp(z)
+        sum_exp_z = np.sum(exp_z, axis=1, keepdims=True)
+
+        # Normalize to get softmax probabilities
+        softmax_output = exp_z / sum_exp_z
+
+        # Print diagnostics after processing
+        print("Max value in softmax output:", np.max(softmax_output))
+        print("Min value in softmax output:", np.min(softmax_output))
+        s = f"max value in softmax output: {np.max(softmax_output)} and min value in softmax output: {np.min(softmax_output)}"
+        if "nan" in s:
+            raise ValueError(f"NaN values in softmax output: {softmax_output}")
+
+        # Return the numerically stable softmax
+        return softmax_output
+        
+        # return z - z_max - log_exp_sum
+        
+        # # Clip z to prevent very large values
+        # z = np.clip(z, -700, 700)  # Avoid overflow in np.exp
+        # z_max = np.max(z, axis=1, keepdims=True)
+        # exp_z = np.exp(z - z_max)
+        # return exp_z / np.sum(exp_z, axis=1, keepdims=True)
+
+        # exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
+        # return exp_z / np.sum(exp_z, axis=1, keepdims=True)
 
     def get_activation(self, name):
         if name == 'relu': return self.relu

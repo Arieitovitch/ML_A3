@@ -2,6 +2,7 @@ import numpy as np
 import os
 import pickle
 import matplotlib.pyplot as plt
+import copy
 class MLP:
     def __init__(
         self, input_size, hidden_layers, output_size, activations=None, 
@@ -22,27 +23,32 @@ class MLP:
             activations = ['relu'] * len(hidden_layers) + ['softmax']
         self.activations = activations
 
-        for i in range(len(self.layers) - 1):
-            fan_in = self.layers[i]
-            fan_out = self.layers[i + 1]
-            activation = self.activations[i]
+        if not default_weights or not default_biases:
+            for i in range(len(self.layers) - 1):
+                fan_in = self.layers[i]
+                fan_out = self.layers[i + 1]
+                activation = self.activations[i]
 
-            if activation == 'tanh': # Xavier initialization
-                limit = np.sqrt(6 / (fan_in + fan_out))
-                w = np.random.uniform(-limit, limit, size=(fan_in, fan_out))
-            elif activation in ['relu', 'leaky_relu']: # He initialization
-                std = np.sqrt(2 / fan_in)
-                w = np.random.randn(fan_in, fan_out) * std
-            else:
-                w = np.random.randn(fan_in, fan_out) * 0.01  # Default initialization
+                if activation == 'tanh': # Xavier initialization
+                    limit = np.sqrt(6 / (fan_in + fan_out))
+                    w = np.random.uniform(-limit, limit, size=(fan_in, fan_out))
+                elif activation in ['relu', 'leaky_relu']: # He initialization
+                    std = np.sqrt(2 / fan_in)
+                    w = np.random.randn(fan_in, fan_out) * std
+                else:
+                    w = np.random.randn(fan_in, fan_out) * 0.01  # Default initialization
 
-            self.weights.append(w)
-            self.biases.append(np.zeros((1, fan_out)))
+                self.weights.append(w)
+                self.biases.append(np.zeros((1, fan_out)))
+        else:
+            self.weights = default_weights
+            self.biases = default_biases
         
         # Save history of loss
         self.save_history = save_history
         self.history = {}      # {epoch: loss}
         self.val_history = {}  # {epoch: val_loss}
+        self.historic_weights = {} # {epoch: [weights, biases]}
 
         print("Model initialized with the following configuration:")
         print(f"Weights: min={np.min([np.min(w) for w in self.weights])}, max={np.max([np.max(w) for w in self.weights])}")
@@ -183,6 +189,7 @@ class MLP:
                 self.history[epoch] = loss
                 if val_loss is not None:
                     self.val_history[epoch] = val_loss
+                self.historic_weights[epoch] = copy.deepcopy([self.weights, self.biases])
 
             # Print losses for monitoring
             if epoch % 10 == 0:
@@ -215,6 +222,9 @@ class MLP:
                 pickle.dump(self.weights, f)
             with open(f"{directory}/biases.pkl", "wb") as f:
                 pickle.dump(self.biases, f)
+            # Save history of weights
+            with open(f"{directory}/historic_weights.pkl", "wb") as f:
+                pickle.dump(self.historic_weights, f)
             
 
     def predict(self, X):

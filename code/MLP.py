@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import pickle
-
+import matplotlib.pyplot as plt
 class MLP:
     def __init__(
         self, input_size, hidden_layers, output_size, activations=None, 
@@ -32,9 +32,17 @@ class MLP:
         self.save_history = save_history
         self.history = {} #{epoch: loss}
 
+        print("Model initialized with the following configuration:")
+        print(f"Weights: min={np.min([np.min(w) for w in self.weights])}, max={np.max([np.max(w) for w in self.weights])}")
+
+        self.hist_z_max = []
+        self.hist_z_min = []
+
     # Activation functions and their derivatives
     def relu(self, z): return np.maximum(0, z)
-    def relu_derivative(self, z, alpha=0.01): return np.where(z > 0, 1, alpha)
+    def relu_derivative(self, z):
+        return np.where(z > 0, 1, 0)
+
 
     def tanh(self, z): return np.tanh(z)
     def tanh_derivative(self, z): return 1 - np.tanh(z) ** 2
@@ -45,17 +53,42 @@ class MLP:
         dz = np.ones_like(z)
         dz[z < 0] = alpha
         return dz
+    
     def softmax(self, z):
-        exp_z = np.exp(z - np.max(z))
-        val = exp_z / exp_z.sum(axis=-1, keepdims=True)
-        print (z)
-        if "nan" in str(val):
-            print("NAN in softmax")
+        if "nan" not in str(z) or "inf" not in str(z):
+            self.hist_z_max.append(np.max(z)) 
+            self.hist_z_min.append(np.min(z))
+        else :
+            print("NAN in z")
             print(z)
+            plt.plot(self.hist_z_max)
+            plt.plot(self.hist_z_min)
+            plt.legend(["max", "min"])
+            # log scale
+            plt.yscale('log')
+            plt.show()
+            raise ValueError("NAN in z")
+        z_max = np.max(z, axis=1, keepdims=True)
+        z_norm = z - z_max
+        z_norm = np.clip(z_norm, -500, 500)  # Prevent underflow/overflow
+        exp_z = np.exp(z_norm)
+        sum_exp_z = np.sum(exp_z, axis=1, keepdims=True) + 1e-8  # Prevent division by zero
+        softmax = exp_z / sum_exp_z
+        # return softmax
+        if "nan" in str(softmax):
+            print("NAN in softmax")
+            print("z")
+            print(z)
+            print("exp_z")
             print(exp_z)
-            print(val)
+            print("softmax")
+            print(softmax)
+            plt.plot(self.hist_z_max)
+            plt.plot(self.hist_z_min)
+            plt.legend(["max", "min"])
+            plt.show()
             raise ValueError("NAN in softmax")
-        return val
+        return softmax
         
         # return z - z_max - log_exp_sum
         
@@ -108,6 +141,12 @@ class MLP:
             # Compute gradients
             dw = np.dot(self.a[i].T, dz) / m
             db = np.sum(dz, axis=0, keepdims=True) / m
+
+            # Clip gradients to prevent exploding gradients
+            max_grad_norm = 500.0
+            dw = np.clip(dw, -max_grad_norm, max_grad_norm)
+            db = np.clip(db, -max_grad_norm, max_grad_norm)
+
             # Update weights and biases
             self.weights[i] -= lr * dw
             self.biases[i] -= lr * db

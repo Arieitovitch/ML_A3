@@ -15,18 +15,29 @@ class MLP:
         :param activations: List of activation functions for each layer
         """
         self.layers = [input_size] + hidden_layers + [output_size]
-        self.weights = [
-            np.random.randn(self.layers[i], self.layers[i + 1]) * 0.01 
-            for i in range(len(self.layers) - 1)
-        ] if default_weights is None else default_weights
-        self.biases = [
-            np.zeros((1, self.layers[i + 1])) for i in range(len(self.layers) - 1)
-        ] if default_biases is None else default_biases
-        
-        # Default activations if none provided
+        self.weights = []
+        self.biases = []
+
         if activations is None:
-            activations = ['relu'] * (len(hidden_layers)) + ['softmax']
+            activations = ['relu'] * len(hidden_layers) + ['softmax']
         self.activations = activations
+
+        for i in range(len(self.layers) - 1):
+            fan_in = self.layers[i]
+            fan_out = self.layers[i + 1]
+            activation = self.activations[i]
+
+            if activation == 'tanh': # Xavier initialization
+                limit = np.sqrt(6 / (fan_in + fan_out))
+                w = np.random.uniform(-limit, limit, size=(fan_in, fan_out))
+            elif activation in ['relu', 'leaky_relu']: # He initialization
+                std = np.sqrt(2 / fan_in)
+                w = np.random.randn(fan_in, fan_out) * std
+            else:
+                w = np.random.randn(fan_in, fan_out) * 0.01  # Default initialization
+
+            self.weights.append(w)
+            self.biases.append(np.zeros((1, fan_out)))
         
         # Save history of loss
         self.save_history = save_history
@@ -45,7 +56,9 @@ class MLP:
 
 
     def tanh(self, z): return np.tanh(z)
-    def tanh_derivative(self, z): return 1 - np.tanh(z) ** 2
+    def tanh_derivative(self, z): 
+        print(f"---\nz in tanh_derivative: {z}, tanh(z) in tanh_derivative: {np.tanh(z)}, 1 - tanh(z) ** 2 in tanh_derivative: {1 - np.tanh(z) ** 2}")
+        return 1 - np.tanh(z) ** 2
     def leaky_relu(self, z, alpha=0.01):
         return np.where(z > 0, z, alpha * z)
 
@@ -55,36 +68,26 @@ class MLP:
         return dz
     
     def softmax(self, z):
-        # if "nan" not in str(z) or "inf" not in str(z):
-        #     self.hist_z_max.append(np.max(z)) 
-        #     self.hist_z_min.append(np.min(z))
-        # else :
-        #     print("NAN in z")
-        #     print(z)
-        #     plt.plot(self.hist_z_max)
-        #     plt.plot(self.hist_z_min)
-        #     plt.legend(["max", "min"])
-        #     # log scale
-        #     plt.yscale('log')
-        #     plt.show()
-        #     raise ValueError("NAN in z")
-        exp_z = np.exp(z)
-        sum_exp_z = np.sum(exp_z, axis=1, keepdims=True) + 1e-8  # Prevent division by zero
-        softmax = exp_z / sum_exp_z
-        # return softmax
-        if "nan" in str(softmax):
-            print("NAN in softmax")
-            print("z")
+        if np.isnan(z).any() or np.isinf(z).any():
+            print("NAN in z")
             print(z)
-            print("exp_z")
-            print(exp_z)
-            print("softmax")
-            print(softmax)
             plt.plot(self.hist_z_max)
             plt.plot(self.hist_z_min)
             plt.legend(["max", "min"])
-            plt.show()
-            raise ValueError("NAN in softmax")
+            plt.yscale('log')
+            plt.savefig("z_hist.png")
+            raise ValueError("NAN in z")
+        else :
+            self.hist_z_max.append(np.max(z)) 
+            self.hist_z_min.append(np.min(z))
+
+        z_max = np.max(z, axis=1, keepdims=True)
+        z_norm = z - z_max
+        clip = 1e6
+        z_norm = np.clip(z_norm, -clip, clip)
+        exp_z = np.exp(z_norm)
+        sum_exp_z = np.sum(exp_z, axis=1, keepdims=True) + 1e-8
+        softmax = exp_z / sum_exp_z
         return softmax
 
     def get_activation(self, name):
@@ -129,9 +132,9 @@ class MLP:
             db = np.sum(dz, axis=0, keepdims=True) / m
 
             # Clip gradients to prevent exploding gradients
-            # max_grad_norm = 100_000_000.0
-            # dw = np.clip(dw, -max_grad_norm, max_grad_norm)
-            # db = np.clip(db, -max_grad_norm, max_grad_norm)
+            max_grad_norm = 100_000_000.0
+            dw = np.clip(dw, -max_grad_norm, max_grad_norm)
+            db = np.clip(db, -max_grad_norm, max_grad_norm)
 
             # Update weights and biases
             self.weights[i] -= lr * dw

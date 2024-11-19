@@ -83,7 +83,7 @@ def one_hot_encode(y, num_classes):
     return np.eye(num_classes)[y.astype(int)]
 
 def load_unnormalized_data():
-    data = np.load(os.path.join("code/processed_data", "mlp_data.npz"))
+    data = np.load(os.path.join("code/processed_data", "mlp_data_unnormalized.npz"))
     X_train = data['X_train'] 
     y_train = data['y_train']
     X_test = data['X_test']
@@ -230,9 +230,9 @@ def train_and_evaluate(model, model_name, epochs=100, lr = 0.01, batch_size=64):
 
 def task1():
     # Model 1: No hidden layers
-    # activations = ['softmax']  # Only output activation
-    # model1 = MLP(input_size, [], num_classes, activations)
-    # acc1 = train_and_evaluate(model1, "Model 1 (No Hidden Layers)", epochs=100, lr = 0.01, batch_size=64)
+    activations = ['softmax']  # Only output activation
+    model1 = MLP(input_size, [], num_classes, activations)
+    acc1 = train_and_evaluate(model1, "Model 1 (No Hidden Layers)", epochs=100, lr = 0.005, batch_size=128)
 
     # Model 2: One hidden layer
     hidden_layers = [256]
@@ -248,7 +248,7 @@ def task1():
     
     # Write histories to memory
     histories = {
-        # "Model 1 (No Hidden Layers)": model1.history,
+        "Model 1 (No Hidden Layers)": model1.history,
         "Model 2 (One Hidden Layer)": model2.history,
         "Model 3 (Two Hidden Layers)": model3.history,
     }
@@ -256,7 +256,7 @@ def task1():
     save_histories(histories, "loss_histories_task1")
     
     return {
-        # "Model 1 (No Hidden Layers)": acc1, 
+        "Model 1 (No Hidden Layers)": acc1, 
         "Model 2 (One Hidden Layer)": acc2, 
         "Model 3 (Two Hidden Layers)": acc3,
     }
@@ -266,12 +266,12 @@ def task2():
     # Model with tanh activations
     activations_tanh = ['tanh', 'tanh', 'softmax']
     model_tanh = MLP(input_size, hidden_layers, num_classes, activations_tanh)
-    acc_tanh = train_and_evaluate(model_tanh, "Model with Tanh Activations")
+    acc_tanh = train_and_evaluate(model_tanh, "Model with Tanh Activations", epochs=100, lr = 0.01, batch_size=256)
 
     # Model with Leaky ReLU activations
     activations_leaky_relu = ['leaky_relu', 'leaky_relu', 'softmax']
     model_leaky_relu = MLP(input_size, hidden_layers, num_classes, activations_leaky_relu)
-    acc_leaky_relu = train_and_evaluate(model_leaky_relu, "Model with Leaky ReLU Activations")
+    acc_leaky_relu = train_and_evaluate(model_leaky_relu, "Model with Leaky ReLU Activations", epochs=100, lr = 0.01, batch_size=256)
     
     # Write histories to memory
     histories = {
@@ -290,7 +290,7 @@ def task3():
     activations = ['leaky_relu', 'leaky_relu', 'softmax']
     model_l1 = MLPREG(input_size, hidden_layers, num_classes, activations)
     print("Training Model with L1 Regularization")
-    model_l1.fit(X_train, y_train_one_hot, epochs=50, lr=0.01, batch_size=64, l1_lambda=0.001)
+    model_l1.fit(X_train, y_train_one_hot, epochs=50, lr=0.01, batch_size=64, l1_lambda=0.001, save_weights=True, path_prefix="task3_l1")
     y_pred_l1 = model_l1.predict(X_test)
     acc_l1 = np.mean(y_pred_l1 == y_test)
     print(f"Model with L1 Regularization Test Accuracy: {acc_l1 * 100:.2f}%\n")
@@ -298,7 +298,7 @@ def task3():
     model_l2 = MLPREG(input_size, hidden_layers, num_classes, activations)
     print("Training Model with L2 Regularization")
     
-    model_l2.fit(X_train, y_train_one_hot, epochs=50, lr=0.01, batch_size=64, l2_lambda=0.001)
+    model_l2.fit(X_train, y_train_one_hot, epochs=50, lr=0.01, batch_size=64, l2_lambda=0.001, save_weights=True, path_prefix="task3_l2")
     y_pred_l2 = model_l2.predict(X_test)
     acc_l2 = np.mean(y_pred_l2 == y_test)
     print(f"Model with L2 Regularization Test Accuracy: {acc_l2 * 100:.2f}%\n")
@@ -322,7 +322,7 @@ def task4():
 
     # Train the model on unnormalized data
     print("Training Model on Unnormalized Data")
-    model_un.fit(X_train_un, y_train_un_one_hot, epochs=50, lr=0.01, batch_size=64)
+    model_un.fit(X_train_un, y_train_un_one_hot, epochs=50, lr=0.01, batch_size=64, save_weights=True, path_prefix="task4_un")
     y_pred_un = model_un.predict(X_test_un)
     acc_un = np.mean(y_pred_un == y_test_un)
     print(f"Model on Unnormalized Data Test Accuracy: {acc_un * 100:.2f}%\n")
@@ -454,8 +454,8 @@ def task8():
     
 
 results1_4 = {
-    "Task 1": task1(),
-    # "Task 2": task2(),
+    # "Task 1": task1(),
+    "Task 2": task2(),
     # "Task 3": task3(),
     # "Task 4": task4(),
 }

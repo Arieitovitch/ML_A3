@@ -89,17 +89,6 @@ class MLP:
             plt.show()
             raise ValueError("NAN in softmax")
         return softmax
-        
-        # return z - z_max - log_exp_sum
-        
-        # # Clip z to prevent very large values
-        # z = np.clip(z, -700, 700)  # Avoid overflow in np.exp
-        # z_max = np.max(z, axis=1, keepdims=True)
-        # exp_z = np.exp(z - z_max)
-        # return exp_z / np.sum(exp_z, axis=1, keepdims=True)
-
-        # exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
-        # return exp_z / np.sum(exp_z, axis=1, keepdims=True)
 
     def get_activation(self, name):
         if name == 'relu': return self.relu

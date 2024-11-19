@@ -17,7 +17,7 @@ def plot_history(history, title="Loss history", save_path=None):
     plt.ylabel("Loss")
     if save_path is not None:
         plt.savefig(save_path)
-    plt.show()
+    # plt.show()
 
 def load_history(path):
     """

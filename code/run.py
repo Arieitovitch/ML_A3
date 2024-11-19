@@ -17,6 +17,11 @@ from torchvision import models # type: ignore
 import matplotlib.pyplot as plt
 import pickle
 
+def save_histories(histories, filename, directory = "histories"):
+    os.makedirs(directory, exist_ok=True)
+    with open(f"{directory}/{filename}.pkl", "wb") as pkl_file:
+        pickle.dump(histories, pkl_file)
+
 def adjust_labels(labels):
     labels = labels.squeeze()
     if labels.dim() == 0:
@@ -78,14 +83,14 @@ def one_hot_encode(y, num_classes):
     return np.eye(num_classes)[y.astype(int)]
 
 def load_unnormalized_data():
-    data = np.load(os.path.join("processed_data", "mlp_data.npz"))
+    data = np.load(os.path.join("code/processed_data", "mlp_data.npz"))
     X_train = data['X_train'] * 255  # Reverting normalization
     y_train = data['y_train']
     X_test = data['X_test'] * 255
     y_test = data['y_test']
     return X_train, y_train, X_test, y_test
 
-data_path = os.path.join("processed_data", "mlp_data.npz")
+data_path = os.path.join("code/processed_data", "mlp_data.npz")
 X_train, y_train, X_val, y_val, X_test, y_test = load_data(data_path)
 input_size = X_train.shape[1]
 hidden_layers = []
@@ -132,8 +137,17 @@ def train_cnn(model, train_loader, criterion, optimizer, epochs=10, save_weights
         loss = float(f"{total_loss/len(train_loader):.4f}")
         print(f"Epoch [{epoch+1}/{epochs}], Loss: {loss}")
         history[epoch] = loss
+    
+    # Save weights and biases
     if save_weights:
-        torch.save(model.state_dict(), f"weights/{path_prefix + '/' if path_prefix else ''}weights.pth")
+        if path_prefix:
+            path_prefix = path_prefix.replace(' ','').replace('(','').replace(')','')
+            directory = f"weights/{path_prefix}"
+        else:
+            directory = "weights"
+        os.makedirs(directory, exist_ok=True)  # Create the directory recursively
+        # Save weights and biases
+        torch.save(model.state_dict(), f"{directory}/weights.pth")
     return history
     
         
@@ -176,7 +190,14 @@ def train_transfer_model(model, train_loader, criterion, optimizer, epochs=10, s
         history[epoch] = round(total_loss,4)
         
     if save_weights:
-        torch.save(model.state_dict(), f"weights/{path_prefix + '/' if path_prefix else ''}weights.pth")
+        if path_prefix:
+            path_prefix = path_prefix.replace(' ','').replace('(','').replace(')','')
+            directory = f"weights/{path_prefix}"
+        else:
+            directory = "weights"
+        os.makedirs(directory, exist_ok=True)  # Create the directory recursively
+        # Save weights and biases
+        torch.save(model.state_dict(), f"{directory}/weights.pth")
     return history
         
             
@@ -198,9 +219,9 @@ def evaluate_transfer_model(model, test_loader):
 
 
 # Function to train and evaluate a model
-def train_and_evaluate(model, model_name):
+def train_and_evaluate(model, model_name, epochs=50):
     print(f"Training {model_name}")
-    model.fit(X_train, y_train_one_hot, epochs=50, lr=0.01, batch_size=64, save_weights=True, path_prefix=model_name)
+    model.fit(X_train, y_train_one_hot, epochs=epochs, lr=0.01, batch_size=64, save_weights=True, path_prefix=model_name)
     y_pred = model.predict(X_test)
     test_accuracy = np.mean(y_pred == y_test)
     print(f"{model_name} Test Accuracy: {test_accuracy * 100:.2f}%\n")
@@ -211,7 +232,7 @@ def task1():
     # Model 1: No hidden layers
     activations = ['softmax']  # Only output activation
     model1 = MLP(input_size, [], num_classes, activations)
-    acc1 = train_and_evaluate(model1, "Model 1 (No Hidden Layers)")
+    acc1 = train_and_evaluate(model1, "Model 1 (No Hidden Layers)", epochs=100)
 
     # Model 2: One hidden layer
     hidden_layers = [256]
@@ -232,8 +253,7 @@ def task1():
         "Model 3 (Two Hidden Layers)": model3.history,
     }
     # Save to a pickle file
-    with open("histories/loss_histories_task1.pkl", "wb") as pkl_file:
-        pickle.dump(histories, pkl_file)
+    save_histories(histories, "loss_histories_task1")
     
     return {
         "Model 1 (No Hidden Layers)": acc1, 
@@ -259,8 +279,7 @@ def task2():
         "Model with Leaky ReLU Activations": model_leaky_relu.history,
     }
     # Save to a pickle file
-    with open("histories/loss_histories_task2.pkl", "wb") as pkl_file:
-        pickle.dump(histories, pkl_file)
+    save_histories(histories, "loss_histories_task2")
     
     return {
         "Model with Tanh Activations": acc_tanh,
@@ -290,8 +309,7 @@ def task3():
         "Model with L2 Regularization": model_l2.history,
     }
     # Save to a pickle file
-    with open("histories/loss_histories_task3.pkl", "wb") as pkl_file:
-        pickle.dump(histories, pkl_file)
+    save_histories(histories, "loss_histories_task3")
     
     return {
         "Model with L1 Regularization": acc_l1,
@@ -314,8 +332,7 @@ def task4():
         "Model on Unnormalized Data": model_un.history,
     }
     # Save to a pickle file
-    with open("histories/loss_histories_task4.pkl", "wb") as pkl_file:
-        pickle.dump(histories, pkl_file)
+    save_histories(histories, "loss_histories_task4")
 
     return {
         "Model on Unnormalized Data": acc_un,
@@ -350,8 +367,7 @@ def task5():
         "MLP on 128-Pixel Images": model_128.history,
     }
     # Save to a pickle file
-    with open("histories/loss_histories_task5.pkl", "wb") as pkl_file:
-        pickle.dump(histories, pkl_file)
+    save_histories(histories, "loss_histories_task5")
     
     return {
         "MLP on 128-Pixel Images": acc_128,
@@ -437,18 +453,17 @@ def task8():
     }
     
 
-results1_4 = {
-    "Task 1": task1(),
-    "Task 2": task2(),
-    "Task 3": task3(),
-    "Task 4": task4(),
-
-}
-# results5_6= {
-#     "Task 5": task5(),
-#     "Task 6": task6(),
+# results1_4 = {
+#     "Task 1": task1(),
+#     "Task 2": task2(),
+#     "Task 3": task3(),
+#     "Task 4": task4(),
 
 # }
+results5_6= {
+    "Task 5": task5(),
+    "Task 6": task6(),
+}
 
 # results7_8={
 #     "Task 7": task7(),
@@ -457,4 +472,4 @@ results1_4 = {
 
 # Save results to a pickle file
 with open("all_task_accuracies.pkl", "wb") as pkl_file:
-    pickle.dump(results1_4, pkl_file)
+    pickle.dump(results5_6, pkl_file)

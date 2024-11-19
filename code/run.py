@@ -253,16 +253,12 @@ def task1():
         "Model 2 (One Hidden Layer)": model2.history,
         "Model 3 (Two Hidden Layers)": model3.history,
     }
-    # Save to a pickle file
     save_histories(histories, "loss_histories_task1")
-
-    # Write validation history to memory
     val_losses = {
         "Model 1 (No Hidden Layers)": model1.val_history,
         "Model 2 (One Hidden Layer)": model2.val_history,
         "Model 3 (Two Hidden Layers)": model3.val_history,
     }
-    # Save to a pickle file
     save_histories(val_losses, "val_loss_histories_task1")
 
     # Return the test accuracies
@@ -289,15 +285,11 @@ def task2():
         "Model with Tanh Activations": model_tanh.history,
         "Model with Leaky ReLU Activations": model_leaky_relu.history,
     }
-    # Save to a pickle file
     save_histories(histories, "loss_histories_task2")
-
-    # Write validation history to memory
     val_losses = {
         "Model with Tanh Activations": model_tanh.val_history,
         "Model with Leaky ReLU Activations": model_leaky_relu.val_history,
     }
-    # Save to a pickle file
     save_histories(val_losses, "val_loss_histories_task2")
     
     return {

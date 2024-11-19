@@ -219,9 +219,9 @@ def evaluate_transfer_model(model, test_loader):
 
 
 # Function to train and evaluate a model
-def train_and_evaluate(model, model_name, epochs=50):
+def train_and_evaluate(model, model_name, epochs=100, lr = 0.01):
     print(f"Training {model_name}")
-    model.fit(X_train, y_train_one_hot, epochs=epochs, lr=0.01, batch_size=64, save_weights=True, path_prefix=model_name)
+    model.fit(X_train, y_train_one_hot, epochs=epochs, lr=lr, batch_size=64, save_weights=True, path_prefix=model_name)
     y_pred = model.predict(X_test)
     test_accuracy = np.mean(y_pred == y_test)
     print(f"{model_name} Test Accuracy: {test_accuracy * 100:.2f}%\n")
@@ -234,11 +234,11 @@ def task1():
     # model1 = MLP(input_size, [], num_classes, activations)
     # acc1 = train_and_evaluate(model1, "Model 1 (No Hidden Layers)", epochs=100)
 
-    # # Model 2: One hidden layer
-    # hidden_layers = [256]
-    # activations = ['relu', 'softmax']
-    # model2 = MLP(input_size, hidden_layers, num_classes, activations)
-    # acc2 = train_and_evaluate(model2, "Model 2 (One Hidden Layer)")
+    # Model 2: One hidden layer
+    hidden_layers = [256]
+    activations = ['relu', 'softmax']
+    model2 = MLP(input_size, hidden_layers, num_classes, activations)
+    acc2 = train_and_evaluate(model2, "Model 2 (One Hidden Layer)")
 
     # Model 3: Two hidden layers
     hidden_layers = [256, 256]
@@ -249,7 +249,7 @@ def task1():
     # Write histories to memory
     histories = {
         # "Model 1 (No Hidden Layers)": model1.history,
-        # "Model 2 (One Hidden Layer)": model2.history,
+        "Model 2 (One Hidden Layer)": model2.history,
         "Model 3 (Two Hidden Layers)": model3.history,
     }
     # Save to a pickle file

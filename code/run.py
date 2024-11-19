@@ -233,19 +233,19 @@ def task1():
     # Model 1: No hidden layers
     activations = ['softmax']  # Only output activation
     model1 = MLP(input_size, [], num_classes, activations)
-    acc1 = train_and_evaluate(model1, "Model 1 (No Hidden Layers)", epochs=100, lr = 0.005, batch_size=128)
+    acc1 = train_and_evaluate(model1, "Model 1 (No Hidden Layers)", epochs=100, lr = 0.001, batch_size=128)
 
     # Model 2: One hidden layer
     hidden_layers = [256]
     activations = ['relu', 'softmax']
     model2 = MLP(input_size, hidden_layers, num_classes, activations)
-    acc2 = train_and_evaluate(model2, "Model 2 (One Hidden Layer)", epochs=100, lr = 0.005, batch_size=128)
+    acc2 = train_and_evaluate(model2, "Model 2 (One Hidden Layer)", epochs=100, lr = 0.001, batch_size=128)
 
     # Model 3: Two hidden layers
     hidden_layers = [256, 256]
     activations = ['relu', 'relu', 'softmax']
     model3 = MLP(input_size, hidden_layers, num_classes, activations)
-    acc3 = train_and_evaluate(model3, "Model 3 (Two Hidden Layers)", epochs=100, lr = 0.005, batch_size=128)
+    acc3 = train_and_evaluate(model3, "Model 3 (Two Hidden Layers)", epochs=100, lr = 0.001, batch_size=128)
     
     # Write histories to memory
     histories = {

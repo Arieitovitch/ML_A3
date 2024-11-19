@@ -59,7 +59,14 @@ class MLP:
     def relu(self, z): return np.maximum(0, z)
     def relu_derivative(self, z, alpha=0.01): return np.where(z > 0, 1, alpha)
 
-    def tanh(self, z): return np.tanh(z)
+    def tanh(self, z):
+        if np.isnan(z).any() or np.isinf(z).any():
+            raise ValueError("NaN or Inf detected in tanh inputs")
+        output = np.tanh(z)
+        if np.isnan(output).any() or np.isinf(output).any():
+            raise ValueError("NaN or Inf detected in tanh outputs")
+        return output
+
     def tanh_derivative(self, z): 
         print(f"---\nz in tanh_derivative: {z}, tanh(z) in tanh_derivative: {np.tanh(z)}, 1 - tanh(z) ** 2 in tanh_derivative: {1 - np.tanh(z) ** 2}")
         return 1 - np.tanh(z) ** 2
@@ -72,26 +79,17 @@ class MLP:
         return dz
     
     def softmax(self, z):
-        if np.isnan(z).any() or np.isinf(z).any():
-            print("NAN in z")
-            print(z)
-            plt.plot(self.hist_z_max)
-            plt.plot(self.hist_z_min)
-            plt.legend(["max", "min"])
-            plt.yscale('log')
-            plt.savefig("z_hist.png")
-            raise ValueError("NAN in z")
-        else :
-            self.hist_z_max.append(np.max(z)) 
-            self.hist_z_min.append(np.min(z))
-
+        z = np.clip(z, -50, 50) 
         z_max = np.max(z, axis=1, keepdims=True)
         z_norm = z - z_max
-        clip = 1e6
-        z_norm = np.clip(z_norm, -clip, clip)
         exp_z = np.exp(z_norm)
-        sum_exp_z = np.sum(exp_z, axis=1, keepdims=True) + 1e-8
+        sum_exp_z = np.sum(exp_z, axis=1, keepdims=True) + 1e-8  
         softmax = exp_z / sum_exp_z
+        softmax = np.clip(softmax, 1e-8, 1 - 1e-8)
+        
+        if np.isnan(softmax).any() or np.isinf(softmax).any():
+            raise ValueError("NaN or Inf detected in softmax output")
+        
         return softmax
 
     def get_activation(self, name):
@@ -118,6 +116,8 @@ class MLP:
 
         for i in range(len(self.weights)):
             z = np.dot(self.a[-1], self.weights[i]) + self.biases[i]
+            if np.isnan(z).any() or np.isinf(z).any():
+                raise ValueError(f"NaN or Inf detected in logits (z) at layer {i}")
             self.z.append(z)
 
             # Apply layer-specific activation
@@ -134,15 +134,29 @@ class MLP:
             # Compute gradients
             dw = np.dot(self.a[i].T, dz) / m
             db = np.sum(dz, axis=0, keepdims=True) / m
+            
+            if np.isnan(dw).any() or np.isnan(db).any():
+                raise ValueError("NaN detected in backward pass (gradients)")
+
 
             # Clip gradients to prevent exploding gradients
-            max_grad_norm = 100_000_000.0
+            max_grad_norm = 100.0
             dw = np.clip(dw, -max_grad_norm, max_grad_norm)
             db = np.clip(db, -max_grad_norm, max_grad_norm)
 
             # Update weights and biases
             self.weights[i] -= lr * dw
             self.biases[i] -= lr * db
+            
+            for w in self.weights:
+                if np.isnan(w).any() or np.isinf(w).any():
+                    raise ValueError("NaN or Inf detected in weights")
+
+            for b in self.biases:
+                if np.isnan(b).any() or np.isinf(b).any():
+                    raise ValueError("NaN or Inf detected in biases")
+
+            
             # Backpropagate the error
             if i > 0:
                 activation_derivative_func = self.get_activation_derivative(self.activations[i - 1])
@@ -185,6 +199,19 @@ class MLP:
                 val_loss = None
 
             # Save losses
+            
+            log_probs = np.log(self.a[-1] + 1e-8)
+            if np.isnan(log_probs).any():
+                raise ValueError("NaN detected in log probabilities during loss calculation")
+
+            loss = -np.mean(np.sum(y * log_probs, axis=1))
+            if np.isnan(loss):
+                raise ValueError("NaN detected in loss value")
+
+            
+            loss = round(-np.mean(np.sum(y * np.log(self.a[-1] + 1e-8), axis=1)), 4)
+            if epoch % 10 == 0:
+                print(f"Epoch {epoch}: Loss = {loss}")
             if self.save_history:
                 self.history[epoch] = loss
                 if val_loss is not None:

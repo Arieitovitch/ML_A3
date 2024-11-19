@@ -132,9 +132,9 @@ class MLP:
             db = np.sum(dz, axis=0, keepdims=True) / m
 
             # Clip gradients to prevent exploding gradients
-            max_grad_norm = 500.0
-            dw = np.clip(dw, -max_grad_norm, max_grad_norm)
-            db = np.clip(db, -max_grad_norm, max_grad_norm)
+            # max_grad_norm = 100_000_000.0
+            # dw = np.clip(dw, -max_grad_norm, max_grad_norm)
+            # db = np.clip(db, -max_grad_norm, max_grad_norm)
 
             # Update weights and biases
             self.weights[i] -= lr * dw
@@ -146,7 +146,7 @@ class MLP:
                 derivative = activation_derivative_func(self.z[i - 1])
                 dz = da * derivative
 
-    def fit(self, X, y, epochs=100, lr=0.01, batch_size=64, save_weights=True, path_prefix=""):
+    def fit(self, X, y, epochs=50, lr=0.01, batch_size=32, save_weights=True, path_prefix=""):
         """
         Train the model using mini-batch gradient descent.
         :param X: Training data

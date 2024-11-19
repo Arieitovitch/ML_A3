@@ -55,23 +55,20 @@ class MLP:
         return dz
     
     def softmax(self, z):
-        if "nan" not in str(z) or "inf" not in str(z):
-            self.hist_z_max.append(np.max(z)) 
-            self.hist_z_min.append(np.min(z))
-        else :
-            print("NAN in z")
-            print(z)
-            plt.plot(self.hist_z_max)
-            plt.plot(self.hist_z_min)
-            plt.legend(["max", "min"])
-            # log scale
-            plt.yscale('log')
-            plt.show()
-            raise ValueError("NAN in z")
-        z_max = np.max(z, axis=1, keepdims=True)
-        z_norm = z - z_max
-        z_norm = np.clip(z_norm, -500, 500)  # Prevent underflow/overflow
-        exp_z = np.exp(z_norm)
+        # if "nan" not in str(z) or "inf" not in str(z):
+        #     self.hist_z_max.append(np.max(z)) 
+        #     self.hist_z_min.append(np.min(z))
+        # else :
+        #     print("NAN in z")
+        #     print(z)
+        #     plt.plot(self.hist_z_max)
+        #     plt.plot(self.hist_z_min)
+        #     plt.legend(["max", "min"])
+        #     # log scale
+        #     plt.yscale('log')
+        #     plt.show()
+        #     raise ValueError("NAN in z")
+        exp_z = np.exp(z)
         sum_exp_z = np.sum(exp_z, axis=1, keepdims=True) + 1e-8  # Prevent division by zero
         softmax = exp_z / sum_exp_z
         # return softmax

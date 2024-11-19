@@ -84,9 +84,9 @@ def one_hot_encode(y, num_classes):
 
 def load_unnormalized_data():
     data = np.load(os.path.join("code/processed_data", "mlp_data.npz"))
-    X_train = data['X_train'] * 255  # Reverting normalization
+    X_train = data['X_train'] 
     y_train = data['y_train']
-    X_test = data['X_test'] * 255
+    X_test = data['X_test']
     y_test = data['y_test']
     return X_train, y_train, X_test, y_test
 
@@ -219,9 +219,9 @@ def evaluate_transfer_model(model, test_loader):
 
 
 # Function to train and evaluate a model
-def train_and_evaluate(model, model_name, epochs=100, lr = 0.01):
+def train_and_evaluate(model, model_name, epochs=100, lr = 0.01, batch_size=64):
     print(f"Training {model_name}")
-    model.fit(X_train, y_train_one_hot, epochs=epochs, lr=lr, batch_size=64, save_weights=True, path_prefix=model_name)
+    model.fit(X_train, y_train_one_hot, epochs=epochs, lr=lr, batch_size=batch_size, save_weights=True, path_prefix=model_name)
     y_pred = model.predict(X_test)
     test_accuracy = np.mean(y_pred == y_test)
     print(f"{model_name} Test Accuracy: {test_accuracy * 100:.2f}%\n")
@@ -229,22 +229,22 @@ def train_and_evaluate(model, model_name, epochs=100, lr = 0.01):
 
 
 def task1():
-    # # Model 1: No hidden layers
+    # Model 1: No hidden layers
     # activations = ['softmax']  # Only output activation
     # model1 = MLP(input_size, [], num_classes, activations)
-    # acc1 = train_and_evaluate(model1, "Model 1 (No Hidden Layers)", epochs=100)
+    # acc1 = train_and_evaluate(model1, "Model 1 (No Hidden Layers)", epochs=100, lr = 0.01, batch_size=64)
 
     # Model 2: One hidden layer
     hidden_layers = [256]
     activations = ['relu', 'softmax']
     model2 = MLP(input_size, hidden_layers, num_classes, activations)
-    acc2 = train_and_evaluate(model2, "Model 2 (One Hidden Layer)")
+    acc2 = train_and_evaluate(model2, "Model 2 (One Hidden Layer)", epochs=100, lr = 0.005, batch_size=128)
 
     # Model 3: Two hidden layers
     hidden_layers = [256, 256]
     activations = ['relu', 'relu', 'softmax']
     model3 = MLP(input_size, hidden_layers, num_classes, activations)
-    acc3 = train_and_evaluate(model3, "Model 3 (Two Hidden Layers)")
+    acc3 = train_and_evaluate(model3, "Model 3 (Two Hidden Layers)", epochs=100, lr = 0.005, batch_size=128)
     
     # Write histories to memory
     histories = {
@@ -257,7 +257,7 @@ def task1():
     
     return {
         # "Model 1 (No Hidden Layers)": acc1, 
-        # "Model 2 (One Hidden Layer)": acc2, 
+        "Model 2 (One Hidden Layer)": acc2, 
         "Model 3 (Two Hidden Layers)": acc3,
     }
     

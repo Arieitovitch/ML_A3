@@ -129,8 +129,8 @@ class MLP:
             
         # Save weights and biases
         if save_weights:
-            np.save(f"weights/{path_prefix + "/" if path_prefix else ""}weights.npy", self.weights)
-            np.save(f"weights/{path_prefix + "/" if path_prefix else ""}biases.npy", self.biases)
+            np.save(f"weights/{path_prefix + '/' if path_prefix else ''}weights.npy", self.weights)
+            np.save(f"weights/{path_prefix + '/' if path_prefix else ''}biases.npy", self.biases)
         
 
     def predict(self, X):

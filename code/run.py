@@ -578,6 +578,16 @@ def task8():
 results = {
     "Task 2": task2(),
 }
+# results5_6= {
+#     "Task 5": task5(),
+#     "Task 6": task6(),
+
+# }
+
+# results7_8={
+#     "Task 7": task7(),
+#     "Task 8": task8(),
+# }
 
 print(results)
 

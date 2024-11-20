@@ -25,25 +25,6 @@ def save_histories(histories, filename, directory = "histories"):
     with open(f"{directory}/{filename}.pkl", "wb") as pkl_file:
         pickle.dump(histories, pkl_file)
 
-# def adjust_labels(labels):
-#     labels = labels.squeeze()
-#     if labels.dim() == 0:
-#         labels = labels.unsqueeze(0)
-#     return labels.long()
-
-# class TransferLearningModel(nn.Module):
-#     def __init__(self, num_classes):
-#         super(TransferLearningModel, self).__init__()
-#         # Load a pre-trained ResNet model
-#         self.model = models.resnet18(pretrained=True)
-#         # Modify the first convolutional layer to accept 1-channel images
-#         self.model.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
-#         # Replace the final fully connected layer
-#         self.model.fc = nn.Linear(self.model.fc.in_features, num_classes)
-    
-#     def forward(self, x):
-#         return self.model(x)
-
 def prepare_128px_data():
     transform = transforms.Compose([
         transforms.Resize((128, 128)),
@@ -123,37 +104,6 @@ batch_size = 64
 train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
-# def train_cnn(model, train_loader, criterion, optimizer, epochs=10, save_weights=True, path_prefix=""):
-#     history = {}
-#     model.train()
-#     for epoch in range(epochs):
-#         total_loss = 0
-#         for images, labels in train_loader:
-#             # Zero gradients
-#             optimizer.zero_grad()
-#             # Forward pass
-#             outputs = model(images)
-#             labels = labels.view(-1).long()
-#             loss = criterion(outputs, labels)
-#             # Backward pass and optimization
-#             loss.backward()
-#             optimizer.step()
-#             total_loss += loss.item()
-#         loss = float(f"{total_loss/len(train_loader):.4f}")
-#         print(f"Epoch [{epoch+1}/{epochs}], Loss: {loss}")
-#         history[epoch] = loss
-    
-#     # Save weights and biases
-#     if save_weights:
-#         if path_prefix:
-#             path_prefix = path_prefix.replace(' ','').replace('(','').replace(')','')
-#             directory = f"weights/{path_prefix}"
-#         else:
-#             directory = "weights"
-#         os.makedirs(directory, exist_ok=True)  # Create the directory recursively
-#         # Save weights and biases
-#         torch.save(model.state_dict(), f"{directory}/weights.pth")
-#     return history
     
         
 # Evaluate the model
@@ -460,15 +410,12 @@ def train_cnn(model, train_loader, criterion, optimizer, epochs=10):
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
             
-            # Zero gradients
             optimizer.zero_grad()
             
-            # Forward pass
             outputs = model(images)
             labels = labels.view(-1).long()
             loss = criterion(outputs, labels)
             
-            # Backward pass and optimization
             loss.backward()
             optimizer.step()
             
@@ -497,7 +444,6 @@ def evaluate_cnn(model, test_loader):
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
 
-            # Ensure labels are squeezed and converted to long
             labels = labels.view(-1).long()
 
             total += labels.size(0)
@@ -522,7 +468,6 @@ class TransferLearningModel(nn.Module):
         return self.model(x)
 
 
-# Task 6
 def task6():
     train_dataset = OrganAMNIST(split='train', download=True, transform=transforms.ToTensor())
     test_dataset = OrganAMNIST(split='test', download=True, transform=transforms.ToTensor())
@@ -542,14 +487,12 @@ def task6():
     training_time = end_time - start_time
     print(f"Task 6: Model training completed in {training_time:.2f} seconds.")
 
-    # Save plots
     save_metrics_plot(metrics, "Task 6: CNN Training Metrics", "Value", "plots/task6_metrics.png")
 
     accuracy = evaluate_cnn(cnn_model, test_loader)
     return {"Accuracy": accuracy, "Training Time (seconds)": training_time}
 
 
-# Task 7
 def task7():
     transform_128 = transforms.Compose([
         transforms.Resize((128, 128)),
@@ -573,14 +516,12 @@ def task7():
     training_time = end_time - start_time
     print(f"Task 7: Model training completed in {training_time:.2f} seconds.")
 
-    # Save plots
     save_metrics_plot(metrics, "Task 7: CNN Training Metrics (128x128)", "Value", "plots/task7_metrics.png")
 
     accuracy = evaluate_cnn(cnn_model_128, test_loader_128)
     return {"Accuracy": accuracy, "Training Time (seconds)": training_time}
 
 
-# Task 8
 def task8():
     transform_augmented = transforms.Compose([
         transforms.Resize((128, 128)),
@@ -607,7 +548,6 @@ def task8():
     training_time = end_time - start_time
     print(f"Task 8: Model training completed in {training_time:.2f} seconds.")
 
-    # Save plots
     save_metrics_plot(metrics, "Task 8: Transfer Learning Training Metrics", "Value", "plots/task8_metrics.png")
 
     accuracy = evaluate_cnn(transfer_model, test_loader_aug)

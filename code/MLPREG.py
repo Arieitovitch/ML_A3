@@ -40,6 +40,7 @@ class MLPREG:
         self.history = {}
         self.val_history = {}  # For validation loss history
         self.historic_weights = {} # {epoch: [weights, biases]}
+        self.accuracy = {}     # {epoch: accuracy}
 
         print("Model initialized with the following configuration:")
         print(f"Weights: min={np.min([np.min(w) for w in self.weights])}, "
@@ -140,7 +141,10 @@ class MLPREG:
                 dz = da * derivative
 
     def fit(self, X, y, epochs=100, lr=0.01, batch_size=64, l1_lambda=0.0, l2_lambda=0.0,
-            save_weights=True, path_prefix="", X_val=None, y_val=None, patience=5, early_stopping = True):
+            save_weights=True, path_prefix="", 
+            X_val=None, y_val=None, 
+            X_test=None, y_test=None,
+            patience=5, early_stopping = True):
         for epoch in range(epochs):
             indices = np.arange(X.shape[0])
             np.random.shuffle(indices)
@@ -183,6 +187,14 @@ class MLPREG:
                 if val_total_loss is not None:
                     self.val_history[epoch] = val_total_loss
                 self.historic_weights[epoch] = copy.deepcopy([self.weights, self.biases])
+
+            if X_test is not None and y_test is not None:
+                # Compute accuracy
+                y_preds = self.predict(X_test)
+                y_true = np.argmax(y_test, axis=1)
+                accuracy = np.mean(y_preds == y_true)
+                self.accuracy[epoch] = accuracy
+
 
             # Print losses for monitoring
             if epoch % 10 == 0:

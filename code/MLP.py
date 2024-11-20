@@ -49,6 +49,7 @@ class MLP:
         self.history = {}      # {epoch: loss}
         self.val_history = {}  # {epoch: val_loss}
         self.historic_weights = {} # {epoch: [weights, biases]}
+        self.accuracy = {}     # {epoch: accuracy}
 
         print("Model initialized with the following configuration:")
         print(f"Weights: min={np.min([np.min(w) for w in self.weights])}, max={np.max([np.max(w) for w in self.weights])}")
@@ -150,7 +151,10 @@ class MLP:
                 derivative = activation_derivative_func(self.z[i - 1])
                 dz = da * derivative
 
-    def fit(self, X, y, epochs=50, lr=0.01, batch_size=32, save_weights=True, path_prefix="", y_val=None, X_val=None):
+    def fit(self, X, y, epochs=50, lr=0.01, batch_size=32, save_weights=True, path_prefix="", 
+            y_val=None, X_val=None,
+            y_test=None, X_test=None
+        ):
         """
         Train the model using mini-batch gradient descent.
         :param X: Training data
@@ -190,6 +194,13 @@ class MLP:
                 if val_loss is not None:
                     self.val_history[epoch] = val_loss
                 self.historic_weights[epoch] = copy.deepcopy([self.weights, self.biases])
+            
+            if X_test is not None and y_test is not None:
+                # Compute accuracy
+                y_preds = self.predict(X_test)
+                y_true = np.argmax(y_test, axis=1)
+                accuracy = np.mean(y_preds == y_true)
+                self.accuracy[epoch] = accuracy
 
             # Print losses for monitoring
             if epoch % 10 == 0:

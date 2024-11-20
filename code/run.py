@@ -18,6 +18,8 @@ import matplotlib.pyplot as plt
 import pickle
 import time
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 def save_histories(histories, filename, directory = "histories"):
     os.makedirs(directory, exist_ok=True)
     with open(f"{directory}/{filename}.pkl", "wb") as pkl_file:
@@ -161,15 +163,19 @@ def evaluate_cnn(model, test_loader):
     total = 0
     with torch.no_grad():
         for images, labels in test_loader:
+            # Move tensors to the same device as the model
+            images, labels = images.to(device), labels.to(device)
+            
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
-            correct += (predicted == labels.squeeze().long()).sum().item()
+            correct += (predicted == labels).sum().item()
     accuracy = correct / total
     print(f"Test Accuracy: {accuracy * 100:.2f}%")
-    return round(accuracy,4)
+    return round(accuracy, 4)
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
 
 def train_transfer_model(model, train_loader, criterion, optimizer, epochs=10, save_weights=True, path_prefix=""):
     history = {}
@@ -425,6 +431,7 @@ def train_cnn_with_metrics(model, train_loader, test_loader, criterion, optimize
         total = 0
         
         for images, labels in train_loader:
+            # Move tensors to the same device as the model
             images, labels = images.to(device), labels.to(device)
             
             if len(labels.shape) > 1:
@@ -451,6 +458,7 @@ def train_cnn_with_metrics(model, train_loader, test_loader, criterion, optimize
         
         with torch.no_grad():
             for images, labels in test_loader:
+                # Move tensors to the same device as the model
                 images, labels = images.to(device), labels.to(device)
                 
                 if len(labels.shape) > 1:
@@ -475,6 +483,7 @@ def train_cnn_with_metrics(model, train_loader, test_loader, criterion, optimize
         torch.save(model.state_dict(), f"{path_prefix}_model.pth")
     
     return metrics
+
 
 def task6():
     num_classes = len(np.unique(train_dataset.labels))

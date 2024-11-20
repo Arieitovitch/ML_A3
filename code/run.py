@@ -1,4 +1,5 @@
 # this file is going to be run by slurm
+import time
 import data_aquire
 from MLP import MLP
 from MLPREG import MLPREG
@@ -380,7 +381,7 @@ def task5():
     print("Training MLP on 128-Pixel Images")
     model_128.fit(
         X_train_128, y_train_128_one_hot,
-        epochs=50, lr=0.01, batch_size=64,
+        epochs=100, lr=0.01, batch_size=64,
         save_weights=True, path_prefix="task5_128",
         y_val=y_test_128_one_hot, X_val=X_test_128,
         y_test = y_test_128_one_hot, X_test = X_test_128
@@ -608,42 +609,5 @@ def task8():
 
 
 
-# results1_4 = {
-#     "Task 1": task1(),
-#     "Task 2": task2(),
-#     "Task 3": task3(),
-#     "Task 4": task4(),
-# }
 
-# results5_6= {
-#     "Task 5": task5(),
-#     
-# }
-
-
-# from data_aquire import main
-
-# main()
-
-# accuracy_result,timeTook=task6()
-results = {
-    "Task 2": task2(),
-}
-# results5_6= {
-#     "Task 5": task5(),
-#     "Task 6": task6(),
-
-# }
-
-# results7_8={
-#     "Task 7": task7(),
-#     "Task 8": task8(),
-# }
-
-print(results)
-
-
-# Save results to a pickle file
-with open("all_task_accuracies.pkl", "wb") as pkl_file:
-    pickle.dump(results, pkl_file)
     

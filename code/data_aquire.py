@@ -41,7 +41,7 @@ def analyze_data_distribution(data, num_classes):
     """
     return np.bincount(data, minlength=num_classes)
 
-def data_augmentation(dataset, class_counts, min_samples=6164):
+def data_augmentation(dataset, class_counts, min_samples=4000):
     """
     Apply data augmentation to balance the dataset by adding synthetic samples
     through random rotations and flips for underrepresented classes.
@@ -75,16 +75,17 @@ def data_augmentation(dataset, class_counts, min_samples=6164):
         for _ in range(num_to_add):
             # Randomly select an image from the current class
             img = random.choice(class_imgs)
-            
-            # Apply random rotation
-            angle = random.choice([0, 90, 180, 270])
-            rotated_img = rotate(img, angle, reshape=False, mode='nearest')
-            
-            # Apply random flip
-            if random.choice([True, False]):
-                flipped_img = np.flip(rotated_img, axis=1)  # Horizontal flip
+            choice = random.choice([1,2])
+            if choice == 1:
+                # Apply random rotation
+                angle = random.choice([0, 90, 180, 270])
+                rotated_img = rotate(img, angle, reshape=False, mode='nearest')
             else:
-                flipped_img = np.flip(rotated_img, axis=0)  # Vertical flip
+                # Apply random flip
+                if random.choice([True, False]):
+                    flipped_img = np.flip(rotated_img, axis=1)  # Horizontal flip
+                else:
+                    flipped_img = np.flip(rotated_img, axis=0)  # Vertical flip
             
             # Add the augmented image and label to the lists
             augmented_imgs.append(flipped_img)

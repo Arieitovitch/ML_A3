@@ -1,2 +1,4 @@
 proccessed_data/
 __pycache__/*
+weights/*
+*from_arie/*

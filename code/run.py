@@ -507,7 +507,7 @@ def task6():
     acc = evaluate_cnn(cnn_model, test_loader)
     return {
         "CNN": acc,
-    }
+    }, training_time
 
 
 

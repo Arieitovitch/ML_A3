@@ -497,7 +497,6 @@ def task6():
     acc = evaluate_cnn(cnn_model, test_loader)
     return {
         "CNN": acc,
-        "Training Time (seconds)": training_time
     }
 
 
@@ -577,11 +576,13 @@ from data_aquire import main
 
 main()
 
+accuracy_result,timeTook=task6()
 results7_8={
-    "Task 6": task6(),
+    "Task 6": accuracy_result,
     "Task 7": task7(),
     "Task 8": task8(),
 }
+
 
 # Save results to a pickle file
 with open("all_task_accuracies.pkl", "wb") as pkl_file:

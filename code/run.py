@@ -523,18 +523,18 @@ def task8():
     }
     
 
-# results1_4 = {
-#     "Task 1": task1(),
-#     "Task 2": task2(),
-#     "Task 3": task3(),
-#     "Task 4": task4(),
-# }
-
-start = time.time(); 
-results5 = {
-    "Task 5": task5(),
+results1_4 = {
+    "Task 1": task1(),
+    "Task 2": task2(),
+    "Task 3": task3(),
+    "Task 4": task4(),
 }
-print(f"Execution time: {time.time() - start:.5f} seconds")
+
+# start = time.time(); 
+# results5 = {
+#     "Task 5": task5(),
+# }
+# print(f"Execution time: {time.time() - start:.5f} seconds")
 
 # results5_6= {
 #     "Task 5": task5(),

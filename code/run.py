@@ -189,7 +189,13 @@ def evaluate_transfer_model(model, test_loader):
 # Function to train and evaluate a model
 def train_and_evaluate(model, model_name, epochs=100, lr = 0.01, batch_size=64):
     print(f"Training {model_name}")
-    model.fit(X_train, y_train_one_hot, epochs=epochs, lr=lr, batch_size=batch_size, save_weights=True, path_prefix=model_name, y_val = y_val_one_hot, X_val = X_val)
+    model.fit(
+        X_train, y_train_one_hot, 
+        epochs=epochs, lr=lr, batch_size=batch_size, 
+        save_weights=True, path_prefix=model_name, 
+        y_val = y_val_one_hot, X_val = X_val,
+        y_test = y_test_one_hot, X_test = X_test
+    )
     y_pred = model.predict(X_test)
     test_accuracy = np.mean(y_pred == y_test)
     print(f"{model_name} Test Accuracy: {test_accuracy * 100:.2f}%\n")
@@ -227,6 +233,12 @@ def task1():
         "Model 3 (Two Hidden Layers)": model3.val_history,
     }
     save_histories(val_losses, "val_loss_histories_task1")
+    acc_histories = {
+        "Model 1 (No Hidden Layers)": model1.accuracy,
+        "Model 2 (One Hidden Layer)": model2.accuracy,
+        "Model 3 (Two Hidden Layers)": model3.accuracy,
+    }
+    save_histories(acc_histories, "accuracy_histories_task1")
 
     # Return the test accuracies
     return {
@@ -258,6 +270,11 @@ def task2():
         "Model with Leaky ReLU Activations": model_leaky_relu.val_history,
     }
     save_histories(val_losses, "val_loss_histories_task2")
+    acc_histories = {
+        "Model with Tanh Activations": model_tanh.accuracy,
+        "Model with Leaky ReLU Activations": model_leaky_relu.accuracy,
+    }
+    save_histories(acc_histories, "accuracy_histories_task2")
     
     return {
         "Model with Tanh Activations": acc_tanh,
@@ -268,7 +285,13 @@ def task3():
     activations = ['leaky_relu', 'leaky_relu', 'softmax']
     model_l1 = MLPREG(input_size, hidden_layers, num_classes, activations)
     print("Training Model with L1 Regularization")
-    model_l1.fit(X_train, y_train_one_hot, epochs=100, lr=0.005, batch_size=64, l1_lambda=0.001, save_weights=True, path_prefix="task3_l1", X_val=X_val, y_val=y_val_one_hot)
+    model_l1.fit(
+        X_train, y_train_one_hot, 
+        epochs=100, lr=0.005, batch_size=64, l1_lambda=0.001, 
+        save_weights=True, path_prefix="task3_l1", 
+        X_val=X_val, y_val=y_val_one_hot,
+        y_test = y_test_one_hot, X_test = X_test
+    )
     y_pred_l1 = model_l1.predict(X_test)
     acc_l1 = np.mean(y_pred_l1 == y_test)
     print(f"Model with L1 Regularization Test Accuracy: {acc_l1 * 100:.2f}%\n")
@@ -276,7 +299,13 @@ def task3():
     model_l2 = MLPREG(input_size, hidden_layers, num_classes, activations)
     print("Training Model with L2 Regularization")
     
-    model_l2.fit(X_train, y_train_one_hot, epochs=100, lr=0.005, batch_size=64, l2_lambda=0.001, save_weights=True, path_prefix="task3_l2", X_val=X_val, y_val=y_val_one_hot)
+    model_l2.fit(
+        X_train, y_train_one_hot, 
+        epochs=100, lr=0.005, batch_size=64, l2_lambda=0.001, 
+        save_weights=True, path_prefix="task3_l2", 
+        X_val=X_val, y_val=y_val_one_hot,
+        y_test = y_test_one_hot, X_test = X_test
+    )
     y_pred_l2 = model_l2.predict(X_test)
     acc_l2 = np.mean(y_pred_l2 == y_test)
     print(f"Model with L2 Regularization Test Accuracy: {acc_l2 * 100:.2f}%\n")
@@ -286,16 +315,17 @@ def task3():
         "Model with L1 Regularization": model_l1.history,
         "Model with L2 Regularization": model_l2.history,
     }
-    # Save to a pickle file
     save_histories(histories, "loss_histories_task3")
-
-    # Write validation history to memory
     val_losses = {
         "Model with L1 Regularization": model_l1.val_history,
         "Model with L2 Regularization": model_l2.val_history,
     }
-    # Save to a pickle file
     save_histories(val_losses, "val_loss_histories_task3")
+    acc_histories = {
+        "Model with L1 Regularization": model_l1.accuracy,
+        "Model with L2 Regularization": model_l2.accuracy,
+    }
+    save_histories(acc_histories, "accuracy_histories_task3")
     
     return {
         "Model with L1 Regularization": acc_l1,
@@ -308,7 +338,13 @@ def task4():
 
     # Train the model on unnormalized data
     print("Training Model on Unnormalized Data")
-    model_un.fit(X_train_un, y_train_un_one_hot, epochs=50, lr=0.01, batch_size=64, save_weights=True, path_prefix="task4_un", X_val=X_val, y_val=y_val_one_hot)
+    model_un.fit(
+        X_train_un, y_train_un_one_hot, 
+        epochs=50, lr=0.01, batch_size=64, 
+        save_weights=True, path_prefix="task4_un", 
+        X_val=X_val, y_val=y_val_one_hot,
+        y_test = y_test_one_hot, X_test = X_test_un
+    )
     y_pred_un = model_un.predict(X_test_un)
     acc_un = np.mean(y_pred_un == y_test_un)
     print(f"Model on Unnormalized Data Test Accuracy: {acc_un * 100:.2f}%\n")
@@ -318,6 +354,8 @@ def task4():
     save_histories(histories, "loss_histories_task4")
     val_losses = {"Model on Unnormalized Data": model_un.val_history}
     save_histories(val_losses, "val_loss_histories_task4")
+    acc_histories = {"Model on Unnormalized Data": model_un.accuracy}
+    save_histories(acc_histories, "accuracy_histories_task4")
 
     return {
         "Model on Unnormalized Data": acc_un,
@@ -340,7 +378,13 @@ def task5():
     
     # Train the model
     print("Training MLP on 128-Pixel Images")
-    model_128.fit(X_train_128, y_train_128_one_hot, epochs=50, lr=0.01, batch_size=64)
+    model_128.fit(
+        X_train_128, y_train_128_one_hot,
+        epochs=50, lr=0.01, batch_size=64,
+        save_weights=True, path_prefix="task5_128",
+        y_val=y_test_128_one_hot, X_val=X_test_128,
+        y_test = y_test_128_one_hot, X_test = X_test_128
+    )
     
     # Evaluate the model
     y_pred_128 = model_128.predict(X_test_128)
@@ -351,8 +395,15 @@ def task5():
     histories = {
         "MLP on 128-Pixel Images": model_128.history,
     }
-    # Save to a pickle file
     save_histories(histories, "loss_histories_task5")
+    val_losses = {
+        "MLP on 128-Pixel Images": model_128.val_history,
+    }
+    save_histories(val_losses, "val_loss_histories_task5")
+    acc_histories = {
+        "MLP on 128-Pixel Images": model_128.accuracy,
+    }
+    save_histories(acc_histories, "accuracy_histories_task5")
     
     return {
         "MLP on 128-Pixel Images": acc_128,

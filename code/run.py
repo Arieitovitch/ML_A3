@@ -16,6 +16,7 @@ from CNN import CNN, CNN128
 from torchvision import models # type: ignore
 import matplotlib.pyplot as plt
 import pickle
+import time
 
 def save_histories(histories, filename, directory = "histories"):
     os.makedirs(directory, exist_ok=True)
@@ -474,7 +475,6 @@ def train_cnn_with_metrics(model, train_loader, test_loader, criterion, optimize
     
     return metrics
 
-
 def task6():
     num_classes = len(np.unique(train_dataset.labels))
 
@@ -482,13 +482,24 @@ def task6():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(cnn_model.parameters(), lr=0.001)
 
+    start_time = time.time()
+    
     metrics = train_cnn_with_metrics(cnn_model, train_loader, test_loader, criterion, optimizer, epochs=10, path_prefix="task6")
+
+    end_time = time.time()
+    
+    training_time = end_time - start_time
+    print(f"Task 6: Model training completed in {training_time:.2f} seconds.")
     
     save_metrics_plot(metrics['loss'], "Task 6: CNN Training and Test Loss", "Loss", "plots/task6_loss.png")
     save_metrics_plot(metrics['accuracy'], "Task 6: CNN Training and Test Accuracy", "Accuracy (%)", "plots/task6_accuracy.png")
     
     acc = evaluate_cnn(cnn_model, test_loader)
-    return {"CNN": acc}
+    return {
+        "CNN": acc,
+        "Training Time (seconds)": training_time
+    }
+
 
 
 def task7():

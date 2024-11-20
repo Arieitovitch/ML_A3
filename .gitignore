@@ -1,2 +1,5 @@
 proccessed_data/
 gpu-*
+__pycache__/*
+weights/*
+*from_arie/*

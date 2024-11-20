@@ -367,7 +367,7 @@ def task3():
     }
     
 def task4():
-    activations = ['leaky_relu', 'leaky_relu', 'softmax']
+    activations = ['relu', 'relu', 'softmax']
     model_un = MLP(input_size, hidden_layers, num_classes, activations)
 
     # Train the model on unnormalized data

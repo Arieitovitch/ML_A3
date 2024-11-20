@@ -10,8 +10,6 @@
 
 module load cuda/cuda-12.6
 module load miniconda/miniconda-fall2024
-source ~/.bashrc
-conda activate comp551 
 
 python code/run.py
 

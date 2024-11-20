@@ -391,59 +391,121 @@ def task5():
         "MLP on 128-Pixel Images": acc_128,
     }
 
+def plot_metrics(metrics, title, ylabel):
+    epochs = range(1, len(metrics['train']) + 1)
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs, metrics['train'], label='Train', marker='o')
+    plt.plot(epochs, metrics['test'], label='Test', marker='o')
+    plt.title(title)
+    plt.xlabel('Epochs')
+    plt.ylabel(ylabel)
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+def train_cnn_with_metrics(model, train_loader, test_loader, criterion, optimizer, epochs, path_prefix):
+    train_losses = []
+    test_losses = []
+    train_accuracies = []
+    test_accuracies = []
+    
+    for epoch in range(epochs):
+        model.train()
+        running_loss = 0.0
+        correct = 0
+        total = 0
+        
+        for images, labels in train_loader:
+            images, labels = images.to(device), labels.to(device)
+            
+            optimizer.zero_grad()
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            
+            running_loss += loss.item()
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+        
+        train_losses.append(running_loss / len(train_loader))
+        train_accuracies.append(100 * correct / total)
+        
+        # Evaluate on the test set
+        model.eval()
+        test_loss = 0.0
+        correct = 0
+        total = 0
+        
+        with torch.no_grad():
+            for images, labels in test_loader:
+                images, labels = images.to(device), labels.to(device)
+                outputs = model(images)
+                loss = criterion(outputs, labels)
+                test_loss += loss.item()
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+        
+        test_losses.append(test_loss / len(test_loader))
+        test_accuracies.append(100 * correct / total)
+    
+    # Save metrics for plotting
+    metrics = {
+        'loss': {'train': train_losses, 'test': test_losses},
+        'accuracy': {'train': train_accuracies, 'test': test_accuracies}
+    }
+    
+    # Save model weights
+    torch.save(model.state_dict(), f"{path_prefix}_model.pth")
+    
+    return metrics
+
 def task6():
     num_classes = len(np.unique(train_dataset.labels))
 
-    # Initialize the model
     cnn_model = CNN(num_classes)
-
-    # Loss and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(cnn_model.parameters(), lr=0.001)
-    train_cnn(cnn_model, train_loader, criterion, optimizer, epochs=10, save_weights=True, path_prefix="task6")
-    acc = evaluate_cnn(cnn_model, test_loader) 
     
-    return {
-        "CNN": acc,
-    }
+    metrics = train_cnn_with_metrics(cnn_model, train_loader, test_loader, criterion, optimizer, epochs=10, path_prefix="task6")
     
+    # Plot metrics
+    plot_metrics(metrics['loss'], "Task 6: CNN Training and Test Loss", "Loss")
+    plot_metrics(metrics['accuracy'], "Task 6: CNN Training and Test Accuracy", "Accuracy (%)")
+    
+    acc = evaluate_cnn(cnn_model, test_loader)
+    return {"CNN": acc}
+
 def task7():
     transform_128 = transforms.Compose([
         transforms.Resize((128, 128)),
         transforms.ToTensor(),
     ])
     
-    # Load the datasets with transformations
     train_dataset_128 = OrganAMNIST(split='train', download=True, transform=transform_128)
     test_dataset_128 = OrganAMNIST(split='test', download=True, transform=transform_128)
     
-    # Create DataLoaders
     batch_size = 64
     train_loader_128 = DataLoader(dataset=train_dataset_128, batch_size=batch_size, shuffle=True)
     test_loader_128 = DataLoader(dataset=test_dataset_128, batch_size=batch_size, shuffle=False)
     
-    # Determine the number of classes
     num_classes = len(np.unique(train_dataset_128.labels))
-    
-    # Initialize the CNN model for 128x128 images
     cnn_model_128 = CNN128(num_classes)
     
-    # Loss and optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(cnn_model_128.parameters(), lr=0.001)
     
-    # Train the model
-    print("Training CNN on 128-Pixel Images")
-    train_cnn(cnn_model_128, train_loader_128, criterion, optimizer, epochs=10, save_weights=True, path_prefix="task7")
+    metrics = train_cnn_with_metrics(cnn_model_128, train_loader_128, test_loader_128, criterion, optimizer, epochs=10, path_prefix="task7")
     
-    # Evaluate the model
-    print("Evaluating CNN on 128-Pixel Images")
+    # Plot metrics
+    plot_metrics(metrics['loss'], "Task 7: CNN on 128-Pixel Images Loss", "Loss")
+    plot_metrics(metrics['accuracy'], "Task 7: CNN on 128-Pixel Images Accuracy", "Accuracy (%)")
+    
     acc = evaluate_cnn(cnn_model_128, test_loader_128)
-    
-    return {
-        "CNN on 128-Pixel Images": acc,
-    }
-    
+    return {"CNN on 128-Pixel Images": acc}
+
 def task8():
     transform_augmented = transforms.Compose([
         transforms.Resize((128, 128)),
@@ -454,40 +516,45 @@ def task8():
     ])
     train_dataset_aug = OrganAMNIST(split='train', download=True, transform=transform_augmented)
     test_dataset_aug = OrganAMNIST(split='test', download=True, transform=transform_augmented)
-    batch_size = 32  
+    batch_size = 32
     train_loader_aug = DataLoader(dataset=train_dataset_aug, batch_size=batch_size, shuffle=True)
     test_loader_aug = DataLoader(dataset=test_dataset_aug, batch_size=batch_size, shuffle=False)
+    
     num_classes = len(np.unique(train_dataset_aug.labels))
     transfer_model = TransferLearningModel(num_classes)
     transfer_model.to(device)
+    
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(transfer_model.parameters(), lr=0.001)
-    print("Training Transfer Learning Model with Data Augmentation")
-    train_transfer_model(transfer_model, train_loader_aug, criterion, optimizer, epochs=10, save_weights=True, path_prefix="task8")
-    print("Evaluating Transfer Learning Model")
-    acc = evaluate_transfer_model(transfer_model, test_loader_aug)
-    return {
-        "Transfer Learning Model with Data Augmentation": acc,
-    }
     
+    metrics = train_cnn_with_metrics(transfer_model, train_loader_aug, test_loader_aug, criterion, optimizer, epochs=10, path_prefix="task8")
+    
+    # Plot metrics
+    plot_metrics(metrics['loss'], "Task 8: Transfer Learning Loss", "Loss")
+    plot_metrics(metrics['accuracy'], "Task 8: Transfer Learning Accuracy", "Accuracy (%)")
+    
+    acc = evaluate_transfer_model(transfer_model, test_loader_aug)
+    return {"Transfer Learning Model with Data Augmentation": acc}
 
-results1_4 = {
-    "Task 1": task1(),
-    "Task 2": task2(),
-    "Task 3": task3(),
-    "Task 4": task4(),
-}
+
+# results1_4 = {
+#     "Task 1": task1(),
+#     "Task 2": task2(),
+#     "Task 3": task3(),
+#     "Task 4": task4(),
+# }
 
 # results5_6= {
 #     "Task 5": task5(),
-#     "Task 6": task6(),
+#     
 # }
 
-# results7_8={
-#     "Task 7": task7(),
-#     "Task 8": task8(),
-# }
+results7_8={
+    "Task 6": task6(),
+    "Task 7": task7(),
+    "Task 8": task8(),
+}
 
 # Save results to a pickle file
 with open("all_task_accuracies.pkl", "wb") as pkl_file:
-    pickle.dump(results1_4, pkl_file)
+    pickle.dump(results7_8, pkl_file)

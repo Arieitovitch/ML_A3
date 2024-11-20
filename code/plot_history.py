@@ -147,28 +147,28 @@ def build_table1_4(accuracies, validation_histories, accuracy_histories):
     
     return df
 
-# Load histories
-accuracies = load_all_accuracies("all_task_accuracies.pkl")
-validation_histories = {task: load_history(f"histories/val_loss_histories_{task}.pkl") for task in tasks}
-accuracy_histories = {task: load_history(f"histories/accuracy_histories_{task}.pkl") for task in tasks}
+# # Load histories
+# accuracies = load_all_accuracies("all_task_accuracies.pkl")
+# validation_histories = {task: load_history(f"histories/val_loss_histories_{task}.pkl") for task in tasks}
+# accuracy_histories = {task: load_history(f"histories/accuracy_histories_{task}.pkl") for task in tasks}
 
-# Build the table
-df = build_table1_4(accuracies, validation_histories, accuracy_histories)
+# # Build the table
+# df = build_table1_4(accuracies, validation_histories, accuracy_histories)
 
-# Create a Matplotlib figure
-fig, ax = plt.subplots(figsize=(12, 4))  # Adjust figsize as needed
+# # Create a Matplotlib figure
+# fig, ax = plt.subplots(figsize=(12, 4))  # Adjust figsize as needed
 
-# Hide the axes
-ax.axis('tight')
-ax.axis('off')
+# # Hide the axes
+# ax.axis('tight')
+# ax.axis('off')
 
-# Create the table
-table = ax.table(cellText=df.values, colLabels=df.columns, rowLabels=df.index, loc='center', cellLoc='center')
+# # Create the table
+# table = ax.table(cellText=df.values, colLabels=df.columns, rowLabels=df.index, loc='center', cellLoc='center')
 
-# Adjust the table properties
-table.auto_set_font_size(False)
-table.set_fontsize(10)
-table.auto_set_column_width(col=list(range(len(df.columns))))
+# # Adjust the table properties
+# table.auto_set_font_size(False)
+# table.set_fontsize(10)
+# table.auto_set_column_width(col=list(range(len(df.columns))))
 
-# Show the plot
-plt.savefig("figures/accuracies_with_optimal_epoch.png", bbox_inches='tight')
+# # Show the plot
+# plt.savefig("figures/accuracies_with_optimal_epoch.png", bbox_inches='tight')

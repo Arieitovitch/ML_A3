@@ -33,7 +33,7 @@ def save_data(file_name, data):
     """
     np.savez_compressed(file_name, **data)
 
-def main(output_dir="code/processed_data"):
+def main(output_dir="processed_data"):
     os.makedirs(output_dir, exist_ok=True)
 
     # Load the dataset

@@ -84,14 +84,15 @@ def one_hot_encode(y, num_classes):
     return np.eye(num_classes)[y.astype(int)]
 
 def load_unnormalized_data():
-    data = np.load(os.path.join("code/processed_data", "mlp_data_unnormalized.npz"))
+    data = np.load(os.path.join("code/code/processed_data", "mlp_data_unnormalized.npz"))
     X_train = data['X_train'] 
     y_train = data['y_train']
     X_test = data['X_test']
     y_test = data['y_test']
     return X_train, y_train, X_test, y_test
 
-data_path = os.path.join("code/processed_data", "mlp_data.npz")
+data_path = os.path.join("code/code/processed_data", "mlp_data.npz")
+print(data_path)
 X_train, y_train, X_val, y_val, X_test, y_test = load_data(data_path)
 input_size = X_train.shape[1]
 hidden_layers = []
@@ -572,9 +573,9 @@ def task8():
 # }
 
 
-from data_aquire import main
+# from data_aquire import main
 
-main()
+# main()
 
 accuracy_result,timeTook=task6()
 results7_8={

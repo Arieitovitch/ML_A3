@@ -418,6 +418,10 @@ def train_cnn_with_metrics(model, train_loader, test_loader, criterion, optimize
         for images, labels in train_loader:
             images, labels = images.to(device), labels.to(device)
             
+            # Convert one-hot encoded labels to class indices if necessary
+            if len(labels.shape) > 1:
+                labels = labels.argmax(dim=1)
+            
             optimizer.zero_grad()
             outputs = model(images)
             loss = criterion(outputs, labels)
@@ -441,6 +445,11 @@ def train_cnn_with_metrics(model, train_loader, test_loader, criterion, optimize
         with torch.no_grad():
             for images, labels in test_loader:
                 images, labels = images.to(device), labels.to(device)
+                
+                # Convert one-hot encoded labels to class indices if necessary
+                if len(labels.shape) > 1:
+                    labels = labels.argmax(dim=1)
+                
                 outputs = model(images)
                 loss = criterion(outputs, labels)
                 test_loss += loss.item()
@@ -451,16 +460,15 @@ def train_cnn_with_metrics(model, train_loader, test_loader, criterion, optimize
         test_losses.append(test_loss / len(test_loader))
         test_accuracies.append(100 * correct / total)
     
-    # Save metrics for plotting
     metrics = {
         'loss': {'train': train_losses, 'test': test_losses},
         'accuracy': {'train': train_accuracies, 'test': test_accuracies}
     }
     
-    # Save model weights
     torch.save(model.state_dict(), f"{path_prefix}_model.pth")
     
     return metrics
+
 
 def task6():
     num_classes = len(np.unique(train_dataset.labels))

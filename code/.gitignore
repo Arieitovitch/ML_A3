@@ -1,1 +1,3 @@
 proccessed_data/
+__pycache__/
+gpu-*

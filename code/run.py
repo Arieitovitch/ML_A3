@@ -166,10 +166,19 @@ def evaluate_cnn(model, test_loader):
             # Move tensors to the same device as the model
             images, labels = images.to(device), labels.to(device)
             
+            images, labels = images.to(device), labels.to(device)
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
+            
+            labels = labels.squeeze().long()
+            
+            correct += (predicted == labels).sum().item()
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
+
+    if total == 0:
+        return 0.0
+    
     accuracy = correct / total
     print(f"Test Accuracy: {accuracy * 100:.2f}%")
     return round(accuracy, 4)

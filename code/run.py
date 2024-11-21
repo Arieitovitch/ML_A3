@@ -574,11 +574,9 @@ def task8():
 
 # main()
 
-accuracy_result,timeTook=task6()
+# accuracy_result,timeTook=task6()
 results = {
-    "Task 6": task6(),
-    "Task 7": task7(),
-    "Task 8": task8(),
+    "Task 2": task2(),
 }
 
 print(results)
